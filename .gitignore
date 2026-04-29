@@ -122,3 +122,6 @@ Thumbs.db
 # Agda (preserved from original)
 *.agdai
 **/MAlonzo/**
+
+# Lean / Lake
+.lake/

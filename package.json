@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test",
+    "lean:build": "lake build",
+    "lean:check": "lake build && lake env leanchecker --fresh ShannonManifold"
   },
   "repository": {
     "type": "git",
