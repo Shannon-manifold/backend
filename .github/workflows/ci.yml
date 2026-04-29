@@ -29,7 +29,13 @@ jobs:
 
       - uses: leanprover/lean-action@v1
         with:
-          build: true
-          test: false
-          leanchecker: true
-          use-mathlib-cache: false
+          auto-config: "false"
+          build: "true"
+          test: "false"
+          lint: "false"
+          leanchecker: "false"
+          use-github-cache: "false"
+          use-mathlib-cache: "false"
+
+      - name: Check ShannonManifold with leanchecker
+        run: lake env leanchecker --fresh ShannonManifold
