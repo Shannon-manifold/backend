@@ -1,20 +1,9 @@
-### Gradle ###
+HELP.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-
-### Spring Boot ###
-HELP.md
-
-### Java ###
-*.class
-*.jar
-*.war
-*.ear
-hs_err_pid*
-replay_pid*
 
 ### STS ###
 .apt_generated
@@ -46,16 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-### OS ###
-.DS_Store
-Thumbs.db
-
-### Environment ###
-.env
-.env.*
-!.env.example
-
-### Logs ###
-*.log
-logs/

@@ -1,15 +1,14 @@
 {
   "name": "Shannon Manifold Backend",
-  "image": "mcr.microsoft.com/devcontainers/java:21",
+  "dockerComposeFile": "compose.dev.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "none",
+      "version": "25",
       "installGradle": "true",
       "gradleVersion": "latest"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "moby": false
     }
   },
   "forwardPorts": [8080, 3306],

@@ -1,0 +1,59 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: shannon-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - shannon-net
+
+  app:
+    build: .
+    container_name: shannon-backend
+    expose:
+      - "8080"
+    environment:
+      DB_HOST: mysql
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-shannon}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-shannon1234}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - shannon-net
+
+  mysql:
+    image: mysql:8.0
+    container_name: shannon-mysql
+    environment:
+      MYSQL_DATABASE: shannon_manifold
+      MYSQL_USER: ${MYSQL_USER:-shannon}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shannon1234}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      TZ: Asia/Seoul
+    expose:
+      - "3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - shannon-net
+
+volumes:
+  mysql-data:
+
+networks:
+  shannon-net:
+    driver: bridge
