@@ -8,7 +8,9 @@
       "installGradle": "true",
       "gradleVersion": "latest"
     },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
+    }
   },
   "forwardPorts": [8080, 3306],
   "customizations": {
