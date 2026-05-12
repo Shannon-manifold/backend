@@ -1,6 +1,0 @@
-name = "shannon_manifold"
-version = "0.1.0"
-defaultTargets = ["ShannonManifold"]
-
-[[lean_lib]]
-name = "ShannonManifold"

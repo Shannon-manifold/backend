@@ -1,0 +1,42 @@
+services:
+  app:
+    image: ghcr.io/devcontainers/java:25
+    volumes:
+      - ..:/workspace:cached
+    environment:
+      DB_HOST: mysql
+    command: sleep infinity
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - shannon-net
+
+  mysql:
+    image: mysql:8.0
+    container_name: shannon-mysql-dev
+    environment:
+      MYSQL_DATABASE: shannon_manifold
+      MYSQL_USER: shannon
+      MYSQL_PASSWORD: shannon1234
+      MYSQL_ROOT_PASSWORD: rootpassword
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-dev-data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - shannon-net
+
+volumes:
+  mysql-dev-data:
+
+networks:
+  shannon-net:
+    driver: bridge
