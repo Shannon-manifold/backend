@@ -56,3 +56,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+### Certbot runtime data ###
+certbot/conf/
+certbot/www/

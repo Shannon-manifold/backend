@@ -1,77 +1,146 @@
 # Shannon Manifold Backend
 
-이 저장소는 Shannon Manifold 프로젝트의 Spring Boot 백엔드 서버입니다.
-Docker와 Docker Compose를 활용하여 손쉽게 실행할 수 있도록 구성되어 있습니다.
+Shannon Manifold 프로젝트의 Spring Boot 백엔드 서버입니다.
+Docker Compose로 Spring Boot, MySQL, Nginx, Certbot을 함께 실행합니다.
 
-## 🚀 빠른 시작 (Getting Started)
+## 구성
 
-저장소를 Clone한 후, 제공되는 Docker 환경을 통해 즉시 애플리케이션을 실행할 수 있습니다.
+- `app`: Spring Boot 백엔드, 내부 포트 `8080`
+- `mysql`: MySQL 8.0
+- `nginx`: 외부 `80`, `443` 포트 수신 및 백엔드 프록시
+- `certbot`: Let's Encrypt 인증서 발급/갱신
 
-### 1. 저장소 Clone
-먼저 터미널을 열고 본 저장소를 로컬 머신에 clone 합니다.
-```bash
-git clone <이 레포지토리의 URL>
-cd backend
-```
+## 1. 환경 변수 준비
 
-### 2. 환경 변수 설정
-프로젝트 루트 디렉토리에서 `.env.example` 파일을 복사하여 `.env` 파일을 생성합니다.
-(MySQL 계정 정보 등이 포함되어 있습니다. 필요 시 값을 수정할 수 있습니다.)
 ```bash
 cp .env.example .env
 ```
 
-### 3. Docker로 즉시 실행
-아래 명령어를 실행하면, 내부적으로 `Dockerfile`을 통해 **Spring Boot 애플리케이션 이미지가 자동으로 빌드**되며, Nginx 및 MySQL 컨테이너와 함께 즉시 실행됩니다.
+`.env`에서 아래 값을 실제 환경에 맞게 수정합니다.
+
+```dotenv
+MYSQL_USER=shannon
+MYSQL_PASSWORD=shannon1234
+MYSQL_ROOT_PASSWORD=rootpassword
+
+LETSENCRYPT_DOMAIN=example.com
+LETSENCRYPT_WWW_DOMAIN=www.example.com
+LETSENCRYPT_EMAIL=admin@example.com
+CERTBOT_STAGING=0
+```
+
+`www` 도메인을 쓰지 않는다면 `LETSENCRYPT_WWW_DOMAIN=`처럼 비워두세요.
+
+## 2. 인증서 발급 전 확인
+
+Let's Encrypt HTTP-01 인증은 외부에서 서버의 `80` 포트로 접근할 수 있어야 합니다.
+
+확인할 항목:
+
+- `LETSENCRYPT_DOMAIN`의 A 레코드가 이 서버의 public IP를 가리키는지
+- `LETSENCRYPT_WWW_DOMAIN`을 쓴다면 해당 DNS도 설정되어 있는지
+- 서버 방화벽 또는 클라우드 보안그룹에서 `80`, `443` 포트가 열려 있는지
+- 같은 서버에서 다른 nginx/apache 프로세스가 `80` 포트를 이미 쓰고 있지 않은지
+
+## 3. 최초 HTTPS 설정
+
+아래 스크립트가 최초 인증서 발급 순서를 자동으로 진행합니다.
+
+```bash
+scripts/setup-https.sh
+```
+
+또는 `.env`를 쓰지 않고 직접 넘길 수 있습니다.
+
+```bash
+scripts/setup-https.sh example.com admin@example.com www.example.com
+```
+
+스크립트가 수행하는 순서:
+
+1. `nginx/default.http.conf`를 `nginx/default.conf`로 복사합니다.
+2. 인증서 없이 동작하는 HTTP 전용 nginx를 먼저 실행합니다.
+3. Certbot을 webroot 방식으로 실행해 인증서를 발급합니다.
+4. `nginx/default.https.conf.template`으로 HTTPS nginx 설정을 생성합니다.
+5. Spring Boot, MySQL, Certbot 갱신 컨테이너를 실행한 뒤 nginx 설정을 검사하고 reload합니다.
+
+성공하면 인증서가 아래 경로에 생성됩니다.
+
+```bash
+certbot/conf/live/<도메인>/fullchain.pem
+certbot/conf/live/<도메인>/privkey.pem
+```
+
+확인:
+
+```bash
+curl -I http://example.com
+curl -I https://example.com
+docker compose ps
+```
+
+`http` 요청은 `https`로 `301` 리다이렉트되고, `https` 요청은 nginx를 통해 백엔드로 전달됩니다.
+
+## 4. 이후 일반 실행
+
+최초 인증서 발급이 끝난 뒤에는 일반적으로 아래 명령만 사용하면 됩니다.
 
 ```bash
 docker compose up -d --build
 ```
 
-- `--build` 옵션을 통해 최신 코드가 반영된 도커 이미지를 새로 빌드하고 실행합니다.
-- `-d` 옵션은 백그라운드에서 컨테이너를 실행하게 해줍니다.
+로그 확인:
 
-### 4. 실행 확인
-컨테이너가 정상적으로 실행되었는지 확인하려면 다음 명령어를 사용하세요:
 ```bash
-docker compose ps
-```
-
-- **Nginx (API Gateway)**: `https://실제도메인` 으로 접속하여 백엔드 API를 호출할 수 있습니다. (HTTP 접근 시 HTTPS로 자동 리다이렉트됩니다.)
-- **Spring Boot App**: 포트 `8080` (내부망 통신 전용)
-- **MySQL DB**: 포트 `3306`
-
-실행 로그를 확인하려면 아래 명령어를 입력합니다.
-```bash
-# 전체 로그 확인
 docker compose logs -f
-
-# 특정 컨테이너(app) 로그만 확인
+docker compose logs -f nginx
 docker compose logs -f app
+docker compose logs -f certbot
 ```
 
-## 🔐 SSL 인증서 최초 발급 및 적용
+종료:
 
-현재 프로젝트의 `nginx/default.conf`는 **SSL 인증서가 이미 발급된 상태**를 가정하여 443 포트와 HTTPS 리다이렉션이 적용되어 있습니다. 
-따라서 로컬 환경이나 인증서가 없는 상태에서 최초로 `docker compose up -d`를 실행하면 Nginx 컨테이너가 시작되지 않을 수 있습니다.
-
-실제 서버에 배포하여 도메인을 연결하는 경우 다음 순서로 세팅해 주세요.
-
-1. **도메인 변경**: `nginx/default.conf` 파일을 열어 `example.com`으로 되어 있는 부분을 보유하신 **실제 도메인**으로 모두 변경합니다. (현재 자동 치환 완료됨)
-2. **최초 인증서 발급 (Standalone)**: 아직 Nginx가 켜지지 않은 상태이므로, 80 포트를 사용하여 인증서를 먼저 발급받습니다. (`compose.yaml`에 지정된 무한루프 entrypoint를 덮어쓰기 위해 `--entrypoint` 옵션이 필요합니다.)
-   ```bash
-   sudo docker compose run --rm --entrypoint "certbot" -p 80:80 certbot certonly --standalone -d example.com -d www.example.com
-   ```
-3. **전체 서비스 실행**: 인증서가 발급되면(내부적으로 `./certbot/conf`에 저장됨) 서비스를 정상적으로 실행합니다.
-   ```bash
-   docker compose up -d --build
-   ```
-
-> **참고**: 이후 인증서 갱신은 백그라운드에 떠 있는 `certbot` 컨테이너가 웹루트(`/var/www/certbot`) 방식을 통해 자동으로 만료 전에 처리합니다.
-
-## 🛑 컨테이너 종료 및 삭제
-작업을 마치고 서버를 내릴 때는 다음 명령어를 사용합니다:
 ```bash
 docker compose down
 ```
-> **참고**: `docker compose down` 명령어는 컨테이너와 기본 네트워크를 삭제하지만, MySQL 데이터베이스의 데이터 볼륨은 유지됩니다. 데이터까지 완전히 초기화하려면 `docker compose down -v`를 사용하세요.
+
+MySQL 데이터까지 삭제하려면:
+
+```bash
+docker compose down -v
+```
+
+## 5. 인증서 갱신
+
+`certbot` 컨테이너는 12시간마다 `certbot renew`를 실행합니다.
+인증서 파일이 갱신된 뒤 nginx가 새 인증서를 읽게 하려면 reload가 필요합니다.
+
+```bash
+docker compose exec nginx nginx -s reload
+```
+
+갱신 테스트:
+
+```bash
+docker compose run --rm --entrypoint certbot certbot renew --dry-run
+```
+
+## 문제 해결
+
+Nginx 설정 검사:
+
+```bash
+docker compose exec nginx nginx -t
+```
+
+Nginx가 인증서 파일을 찾지 못한다면 아직 최초 발급이 끝나지 않았거나, `LETSENCRYPT_DOMAIN`과 인증서 경로의 도메인이 다를 가능성이 큽니다.
+
+Certbot이 인증에 실패한다면 DNS가 서버 public IP를 가리키는지, 외부에서 `http://도메인/.well-known/acme-challenge/...` 경로에 접근 가능한지 먼저 확인하세요.
+
+Let's Encrypt rate limit을 피하며 테스트하려면 `.env`에 아래처럼 설정한 뒤 스크립트를 실행하세요.
+
+```dotenv
+CERTBOT_STAGING=1
+```
+
+테스트 성공 후 운영 인증서를 받을 때는 다시 `CERTBOT_STAGING=0`으로 바꾸고 실행합니다.
