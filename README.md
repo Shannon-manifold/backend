@@ -57,10 +57,10 @@ docker compose logs -f app
 
 실제 서버에 배포하여 도메인을 연결하는 경우 다음 순서로 세팅해 주세요.
 
-1. **도메인 변경**: `nginx/default.conf` 파일을 열어 `example.com`으로 되어 있는 부분을 보유하신 **실제 도메인**으로 모두 변경합니다.
-2. **최초 인증서 발급 (Standalone)**: 아직 Nginx가 켜지지 않은 상태이므로, 80 포트를 사용하여 인증서를 먼저 발급받습니다.
+1. **도메인 변경**: `nginx/default.conf` 파일을 열어 `example.com`으로 되어 있는 부분을 보유하신 **실제 도메인**으로 모두 변경합니다. (현재 자동 치환 완료됨)
+2. **최초 인증서 발급 (Standalone)**: 아직 Nginx가 켜지지 않은 상태이므로, 80 포트를 사용하여 인증서를 먼저 발급받습니다. (`compose.yaml`에 지정된 무한루프 entrypoint를 덮어쓰기 위해 `--entrypoint` 옵션이 필요합니다.)
    ```bash
-   docker compose run --rm -p 80:80 certbot certonly --standalone -d 실제도메인.com -d www.실제도메인.com
+   sudo docker compose run --rm --entrypoint "certbot" -p 80:80 certbot certonly --standalone -d example.com -d www.example.com
    ```
 3. **전체 서비스 실행**: 인증서가 발급되면(내부적으로 `./certbot/conf`에 저장됨) 서비스를 정상적으로 실행합니다.
    ```bash
