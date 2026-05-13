@@ -13,6 +13,11 @@ DOMAIN="${1:-${LETSENCRYPT_DOMAIN:-}}"
 EMAIL="${2:-${LETSENCRYPT_EMAIL:-}}"
 WWW_DOMAIN="${3:-${LETSENCRYPT_WWW_DOMAIN:-}}"
 CERTBOT_STAGING="${CERTBOT_STAGING:-0}"
+COMPOSE_FILE_PATH="${COMPOSE_FILE:-compose.yaml}"
+
+compose() {
+    docker compose -f "$COMPOSE_FILE_PATH" "$@"
+}
 
 if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
     echo "Usage: scripts/setup-https.sh <domain> <email> [www-domain]"
@@ -38,10 +43,10 @@ mkdir -p certbot/conf certbot/www
 
 echo "1/5 Activating HTTP-only nginx config."
 cp nginx/default.http.conf nginx/default.conf
-docker compose up -d --no-deps nginx
+compose up -d --no-deps nginx
 
 echo "2/5 Requesting certificate for: $SERVER_NAMES"
-docker compose run --rm \
+compose run --rm \
     --entrypoint certbot \
     certbot certonly \
     --webroot \
@@ -59,10 +64,10 @@ sed \
     nginx/default.https.conf.template > nginx/default.conf
 
 echo "4/5 Starting backend services and certbot renewal container."
-docker compose up -d --build app mysql certbot
+compose up -d --build app mysql certbot
 
 echo "5/5 Testing and reloading nginx."
-docker compose exec -T nginx nginx -t
-docker compose exec -T nginx nginx -s reload
+compose exec -T nginx nginx -t
+compose exec -T nginx nginx -s reload
 
 echo "Done. Check with: curl -I https://$DOMAIN"
