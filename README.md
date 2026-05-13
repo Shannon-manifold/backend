@@ -10,6 +10,51 @@ Docker Compose로 Spring Boot, MySQL, Nginx, Certbot을 함께 실행합니다.
 - `nginx`: 외부 `80`, `443` 포트 수신 및 백엔드 프록시
 - `certbot`: Let's Encrypt 인증서 발급/갱신
 
+## EC2 빠른 배포
+
+EC2에서는 `compose.ec2.yaml`과 `scripts/setup-https-ec2.sh`를 사용합니다.
+
+1. EC2 보안그룹 인바운드를 엽니다.
+
+```text
+TCP 22   내 IP만 허용
+TCP 80   0.0.0.0/0, ::/0
+TCP 443  0.0.0.0/0, ::/0
+```
+
+2. 도메인의 A 레코드를 EC2 Elastic IP 또는 public IPv4로 연결합니다.
+
+```text
+shannonmanifold.p-e.kr -> EC2 public IPv4
+```
+
+3. EC2에 Docker와 Compose plugin을 설치한 뒤 `.env`를 준비합니다.
+
+```bash
+cp .env.ec2.example .env
+vi .env
+```
+
+4. 최초 인증서를 발급하고 HTTPS nginx 설정까지 전환합니다.
+
+```bash
+sudo scripts/setup-https-ec2.sh
+```
+
+5. 상태를 확인합니다.
+
+```bash
+sudo docker compose -f compose.ec2.yaml ps
+curl -I http://shannonmanifold.p-e.kr/health
+curl -I https://shannonmanifold.p-e.kr/health
+```
+
+이후 재배포는 아래 명령을 사용합니다.
+
+```bash
+sudo docker compose -f compose.ec2.yaml up -d --build
+```
+
 ## 1. 환경 변수 준비
 
 ```bash
@@ -50,10 +95,17 @@ Let's Encrypt HTTP-01 인증은 외부에서 서버의 `80` 포트로 접근할 
 scripts/setup-https.sh
 ```
 
+EC2에서는 EC2 전용 compose 파일을 사용하는 래퍼 스크립트를 실행합니다.
+
+```bash
+sudo scripts/setup-https-ec2.sh
+```
+
 또는 `.env`를 쓰지 않고 직접 넘길 수 있습니다.
 
 ```bash
 scripts/setup-https.sh example.com admin@example.com www.example.com
+sudo scripts/setup-https-ec2.sh shannonmanifold.p-e.kr admin@example.com
 ```
 
 스크립트가 수행하는 순서:
@@ -89,6 +141,12 @@ docker compose ps
 docker compose up -d --build
 ```
 
+EC2에서는 아래 명령을 사용합니다.
+
+```bash
+sudo docker compose -f compose.ec2.yaml up -d --build
+```
+
 로그 확인:
 
 ```bash
@@ -98,10 +156,24 @@ docker compose logs -f app
 docker compose logs -f certbot
 ```
 
+EC2 로그 확인:
+
+```bash
+sudo docker compose -f compose.ec2.yaml logs -f nginx
+sudo docker compose -f compose.ec2.yaml logs -f app
+sudo docker compose -f compose.ec2.yaml logs -f certbot
+```
+
 종료:
 
 ```bash
 docker compose down
+```
+
+EC2 종료:
+
+```bash
+sudo docker compose -f compose.ec2.yaml down
 ```
 
 MySQL 데이터까지 삭제하려면:
@@ -119,10 +191,22 @@ docker compose down -v
 docker compose exec nginx nginx -s reload
 ```
 
+EC2에서 reload:
+
+```bash
+sudo docker compose -f compose.ec2.yaml exec nginx nginx -s reload
+```
+
 갱신 테스트:
 
 ```bash
 docker compose run --rm --entrypoint certbot certbot renew --dry-run
+```
+
+EC2에서 갱신 테스트:
+
+```bash
+sudo docker compose -f compose.ec2.yaml run --rm --entrypoint certbot certbot renew --dry-run
 ```
 
 ## 문제 해결
