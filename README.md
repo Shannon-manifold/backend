@@ -50,6 +50,18 @@ docker compose logs -f
 docker compose logs -f app
 ```
 
+## 🔐 SSL 인증서 발급 (Certbot)
+
+본 프로젝트는 Let's Encrypt를 이용한 SSL 인증서 자동 발급 및 갱신을 위해 `certbot` 컨테이너가 포함되어 있습니다.
+실제 사용할 도메인이 서버 IP로 연결되어 있다면, 다음 명령어를 통해 최초 1회 인증서를 발급받을 수 있습니다.
+
+```bash
+# 예시: example.com 도메인에 대한 인증서 발급
+docker compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot/ -d example.com -d www.example.com
+```
+
+인증서가 성공적으로 발급된 이후에는, `nginx/default.conf` 파일에 `listen 443 ssl;` 등의 설정과 발급된 인증서 경로를 추가하고 Nginx 컨테이너를 재시작(`docker compose restart nginx`)해 주시면 됩니다. (인증서 갱신은 백그라운드에서 자동으로 처리됩니다)
+
 ## 🛑 컨테이너 종료 및 삭제
 작업을 마치고 서버를 내릴 때는 다음 명령어를 사용합니다:
 ```bash
