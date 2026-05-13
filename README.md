@@ -37,8 +37,8 @@ docker compose up -d --build
 docker compose ps
 ```
 
-- **Nginx (API Gateway)**: `http://localhost:80` (또는 `http://localhost`) 로 접속하여 백엔드 API를 호출할 수 있습니다.
-- **Spring Boot App**: 포트 `8080` (내부적으로 연결됨)
+- **Nginx (API Gateway)**: `https://실제도메인` 으로 접속하여 백엔드 API를 호출할 수 있습니다. (HTTP 접근 시 HTTPS로 자동 리다이렉트됩니다.)
+- **Spring Boot App**: 포트 `8080` (내부망 통신 전용)
 - **MySQL DB**: 포트 `3306`
 
 실행 로그를 확인하려면 아래 명령어를 입력합니다.
@@ -50,17 +50,24 @@ docker compose logs -f
 docker compose logs -f app
 ```
 
-## 🔐 SSL 인증서 발급 (Certbot)
+## 🔐 SSL 인증서 최초 발급 및 적용
 
-본 프로젝트는 Let's Encrypt를 이용한 SSL 인증서 자동 발급 및 갱신을 위해 `certbot` 컨테이너가 포함되어 있습니다.
-실제 사용할 도메인이 서버 IP로 연결되어 있다면, 다음 명령어를 통해 최초 1회 인증서를 발급받을 수 있습니다.
+현재 프로젝트의 `nginx/default.conf`는 **SSL 인증서가 이미 발급된 상태**를 가정하여 443 포트와 HTTPS 리다이렉션이 적용되어 있습니다. 
+따라서 로컬 환경이나 인증서가 없는 상태에서 최초로 `docker compose up -d`를 실행하면 Nginx 컨테이너가 시작되지 않을 수 있습니다.
 
-```bash
-# 예시: example.com 도메인에 대한 인증서 발급
-docker compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot/ -d example.com -d www.example.com
-```
+실제 서버에 배포하여 도메인을 연결하는 경우 다음 순서로 세팅해 주세요.
 
-인증서가 성공적으로 발급된 이후에는, `nginx/default.conf` 파일에 `listen 443 ssl;` 등의 설정과 발급된 인증서 경로를 추가하고 Nginx 컨테이너를 재시작(`docker compose restart nginx`)해 주시면 됩니다. (인증서 갱신은 백그라운드에서 자동으로 처리됩니다)
+1. **도메인 변경**: `nginx/default.conf` 파일을 열어 `example.com`으로 되어 있는 부분을 보유하신 **실제 도메인**으로 모두 변경합니다.
+2. **최초 인증서 발급 (Standalone)**: 아직 Nginx가 켜지지 않은 상태이므로, 80 포트를 사용하여 인증서를 먼저 발급받습니다.
+   ```bash
+   docker compose run --rm -p 80:80 certbot certonly --standalone -d 실제도메인.com -d www.실제도메인.com
+   ```
+3. **전체 서비스 실행**: 인증서가 발급되면(내부적으로 `./certbot/conf`에 저장됨) 서비스를 정상적으로 실행합니다.
+   ```bash
+   docker compose up -d --build
+   ```
+
+> **참고**: 이후 인증서 갱신은 백그라운드에 떠 있는 `certbot` 컨테이너가 웹루트(`/var/www/certbot`) 방식을 통해 자동으로 만료 전에 처리합니다.
 
 ## 🛑 컨테이너 종료 및 삭제
 작업을 마치고 서버를 내릴 때는 다음 명령어를 사용합니다:
