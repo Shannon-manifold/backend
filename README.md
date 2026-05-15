@@ -28,7 +28,21 @@ TCP 443  0.0.0.0/0, ::/0
 shannonmanifold.p-e.kr -> EC2 public IPv4
 ```
 
-3. EC2에 Docker와 Compose plugin을 설치한 뒤 `.env`를 준비합니다.
+3. EC2에 Docker와 Docker Compose를 설치한 뒤 `.env`를 준비합니다.
+
+```bash
+docker compose version
+```
+
+위 명령이 실패하면 Compose v2 plugin이 없는 상태입니다. 배포 스크립트는 구버전 `docker-compose`도 자동 감지하므로 둘 중 하나는 동작해야 합니다.
+
+```bash
+docker-compose version
+```
+
+둘 다 실패하면 Docker Compose를 먼저 설치하세요. 공식 설치 문서는 <https://docs.docker.com/compose/install/linux/> 입니다.
+
+`docker compose version`은 성공하지만 `sudo docker compose version`이 실패한다면 Compose plugin이 일반 사용자 홈에만 설치된 상태입니다. 이 경우 Docker 권한을 사용자에게 부여해 `sudo` 없이 실행하거나, Compose plugin을 system-wide 경로에 설치하세요.
 
 ```bash
 cp .env.ec2.example .env
@@ -220,6 +234,17 @@ docker compose exec nginx nginx -t
 Nginx가 인증서 파일을 찾지 못한다면 아직 최초 발급이 끝나지 않았거나, `LETSENCRYPT_DOMAIN`과 인증서 경로의 도메인이 다를 가능성이 큽니다.
 
 Certbot이 인증에 실패한다면 DNS가 서버 public IP를 가리키는지, 외부에서 `http://도메인/.well-known/acme-challenge/...` 경로에 접근 가능한지 먼저 확인하세요.
+
+`unknown shorthand flag: 'f' in -f`가 나오면 Docker Compose가 설치되지 않았거나 현재 Docker CLI에서 `docker compose`를 사용할 수 없는 상태입니다.
+
+```bash
+docker compose version
+docker-compose version
+```
+
+둘 중 하나가 동작해야 합니다. 최신 스크립트는 `docker compose`와 `docker-compose`를 모두 지원합니다.
+
+`docker compose version`은 되는데 `sudo docker compose version`만 실패한다면 `sudo`로 실행한 root 환경에서 Compose plugin을 찾지 못하는 상태입니다. EC2에서는 Docker 권한을 사용자에게 부여해 `sudo` 없이 실행하거나 Compose plugin을 system-wide로 설치해야 합니다.
 
 Let's Encrypt rate limit을 피하며 테스트하려면 `.env`에 아래처럼 설정한 뒤 스크립트를 실행하세요.
 

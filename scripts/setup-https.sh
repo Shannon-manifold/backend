@@ -16,7 +16,15 @@ CERTBOT_STAGING="${CERTBOT_STAGING:-0}"
 COMPOSE_FILE_PATH="${COMPOSE_FILE:-compose.yaml}"
 
 compose() {
-    docker compose -f "$COMPOSE_FILE_PATH" "$@"
+    if docker compose version >/dev/null 2>&1; then
+        docker compose -f "$COMPOSE_FILE_PATH" "$@"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        docker-compose -f "$COMPOSE_FILE_PATH" "$@"
+    else
+        echo "Docker Compose is not installed."
+        echo "Install the Docker Compose v2 plugin, or install the legacy docker-compose binary."
+        exit 1
+    fi
 }
 
 if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
