@@ -22,8 +22,8 @@ services:
       - "8080"
     environment:
       DB_HOST: mysql
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-shannon}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-shannon1234}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
     depends_on:
       mysql:
         condition: service_healthy
@@ -36,9 +36,9 @@ services:
     container_name: shannon-mysql
     environment:
       MYSQL_DATABASE: shannon_manifold
-      MYSQL_USER: ${MYSQL_USER:-shannon}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shannon1234}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: Asia/Seoul
     expose:
       - "3306"
