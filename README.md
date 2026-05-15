@@ -25,7 +25,7 @@ TCP 443  0.0.0.0/0, ::/0
 2. 도메인의 A 레코드를 EC2 Elastic IP 또는 public IPv4로 연결합니다.
 
 ```text
-shannonmanifold.p-e.kr -> EC2 public IPv4
+example.com -> EC2 public IPv4
 ```
 
 3. EC2에 Docker와 Docker Compose를 설치한 뒤 `.env`를 준비합니다.
@@ -59,8 +59,8 @@ sudo scripts/setup-https-ec2.sh
 
 ```bash
 sudo docker compose -f compose.ec2.yaml ps
-curl -I http://shannonmanifold.p-e.kr/health
-curl -I https://shannonmanifold.p-e.kr/health
+curl -I http://example.com/health
+curl -I https://example.com/health
 ```
 
 이후 재배포는 아래 명령을 사용합니다.
@@ -78,8 +78,8 @@ cp .env.example .env
 `.env`에서 아래 값을 실제 환경에 맞게 수정합니다.
 
 ```dotenv
-MYSQL_USER=shannon
-MYSQL_PASSWORD=shannon1234
+MYSQL_USER=example_user
+MYSQL_PASSWORD=example_password
 MYSQL_ROOT_PASSWORD=rootpassword
 
 LETSENCRYPT_DOMAIN=example.com
@@ -119,7 +119,7 @@ sudo scripts/setup-https-ec2.sh
 
 ```bash
 scripts/setup-https.sh example.com admin@example.com www.example.com
-sudo scripts/setup-https-ec2.sh shannonmanifold.p-e.kr admin@example.com
+sudo scripts/setup-https-ec2.sh example.com admin@example.com
 ```
 
 스크립트가 수행하는 순서:
