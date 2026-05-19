@@ -1,33 +1,43 @@
 package com.shannonmanifold.backend.controller;
 
+import com.shannonmanifold.backend.dto.TutorialDetailResponse;
+import com.shannonmanifold.backend.dto.TutorialResponse;
+import com.shannonmanifold.backend.service.TutorialService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 튜토리얼 관련 API를 처리하는 컨트롤러
  * 담당자: 이인수
  */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
+@RequiredArgsConstructor
 public class TutorialController {
 
+    private final TutorialService tutorialService;
+
     @GetMapping("/tutorials")
-    public ResponseEntity<?> getTutorials() {
-        return ResponseEntity.ok("튜토리얼 목록 조회 성공");
+    public ResponseEntity<List<TutorialResponse>> getTutorials() {
+        return ResponseEntity.ok(tutorialService.getAllTutorials());
     }
 
     @GetMapping("/tutorials/{tutorialId}")
-    public ResponseEntity<?> getTutorial(@PathVariable Long tutorialId) {
-        return ResponseEntity.ok("튜토리얼 상세 조회 성공");
+    public ResponseEntity<TutorialDetailResponse> getTutorial(@PathVariable Long tutorialId) {
+        return ResponseEntity.ok(tutorialService.getTutorialDetail(tutorialId));
     }
 
     @GetMapping("/users/me/tutorials/progress")
     public ResponseEntity<?> getMyProgress() {
-        return ResponseEntity.ok("나의 진행 상황 조회 성공");
+        return ResponseEntity.ok("나의 진행 상황 조회 기능은 아직 준비 중입니다.");
     }
 
     @PostMapping("/tutorials/{tutorialId}/steps/{stepId}/complete")
-    public ResponseEntity<?> completeStep(@PathVariable Long tutorialId, @PathVariable Long stepId) {
-        return ResponseEntity.ok("단계 완료 처리 성공");
+    public ResponseEntity<Void> completeStep(@PathVariable Long tutorialId, @PathVariable Long stepId) {
+        tutorialService.completeStep(tutorialId, stepId);
+        return ResponseEntity.ok().build();
     }
 }
