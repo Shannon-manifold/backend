@@ -13,7 +13,7 @@ public class ProofResponse {
   private String id;
   private String title;
   private String description;
-  private String status; // "verified", "pending", "failed"
+  private String status;
   private String prover;
   private String language;
   private int likes;
