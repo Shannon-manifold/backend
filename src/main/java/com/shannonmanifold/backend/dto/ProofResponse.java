@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProofResponse {
-  private String id;
+  private Long id;
   private String title;
   private String description;
   private String status;

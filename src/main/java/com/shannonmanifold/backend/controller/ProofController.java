@@ -1,5 +1,8 @@
 package com.shannonmanifold.backend.controller;
 
+import com.shannonmanifold.backend.dto.ProofCreateRequest;
+import com.shannonmanifold.backend.dto.ProofUpdateRequest;
+import com.shannonmanifold.backend.dto.ProofDetailResponse;
 import com.shannonmanifold.backend.dto.ProofResponse;
 import com.shannonmanifold.backend.service.ProofService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +16,7 @@ import java.util.List;
  * 담당자: 이인수
  */
 @RestController
-@RequestMapping("/api/v1/proofs")
+@RequestMapping("/api/proofs")
 @RequiredArgsConstructor
 public class ProofController {
 
@@ -27,36 +30,47 @@ public class ProofController {
 
     @GetMapping("/{proofId}")
     public ResponseEntity<?> getProof(@PathVariable Long proofId) {
-        return ResponseEntity.ok("증명 상세 조회 성공");
+        ProofDetailResponse response = proofService.getProofDetail(proofId);
+        if (response == null)
+            return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    public ResponseEntity<?> createProof() {
-        return ResponseEntity.ok("증명 생성 성공");
+    public ResponseEntity<ProofDetailResponse> createProof(@RequestBody ProofCreateRequest request) {
+        ProofDetailResponse response = proofService.createProof(request);
+        return ResponseEntity.status(201).body(response);
     }
 
     @PutMapping("/{proofId}")
-    public ResponseEntity<?> updateProof(@PathVariable Long proofId) {
-        return ResponseEntity.ok("증명 수정 성공");
+    public ResponseEntity<ProofDetailResponse> updateProof(
+            @PathVariable Long proofId,
+            @RequestBody ProofUpdateRequest request) {
+        ProofDetailResponse response = proofService.updateProof(proofId, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{proofId}")
-    public ResponseEntity<?> deleteProof(@PathVariable Long proofId) {
-        return ResponseEntity.ok("증명 삭제 성공");
+    public ResponseEntity<Void> deleteProof(@PathVariable Long proofId) {
+        proofService.deleteProof(proofId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{proofId}/verify")
-    public ResponseEntity<?> verifyProof(@PathVariable Long proofId) {
-        return ResponseEntity.ok("증명 검증 성공");
+    public ResponseEntity<ProofDetailResponse> verifyProof(@PathVariable Long proofId) {
+        ProofDetailResponse response = proofService.verifyProof(proofId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{proofId}/like")
-    public ResponseEntity<?> toggleLike(@PathVariable Long proofId) {
-        return ResponseEntity.ok("증명 좋아요 성공");
+    public ResponseEntity<ProofDetailResponse> toggleLike(@PathVariable Long proofId) {
+        ProofDetailResponse response = proofService.toggleLike(proofId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{proofId}/bookmarks")
     public ResponseEntity<?> toggleBookmark(@PathVariable Long proofId) {
-        return ResponseEntity.ok("증명 북마크 성공");
+        // TODO: Bookmark 엔티티 구현 후 연결 필요
+        return ResponseEntity.ok("증명 북마크 기능은 아직 준비 중입니다.");
     }
 }

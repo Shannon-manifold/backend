@@ -6,13 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
-enum ProofStatus {
-  verified, pending, failed
-}
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 @Entity
 @Table(name = "proofs")
 @Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Proof {
 
@@ -56,4 +57,31 @@ public class Proof {
 
   @Column(columnDefinition = "LONGTEXT")
   private String code;
+
+  public void update(String title, String description, String language, String field, String latex, String code) {
+    if (title != null) this.title = title;
+    if (description != null) this.description = description;
+    if (language != null) this.language = language;
+    if (field != null) this.field = field;
+    if (latex != null) this.latex = latex;
+    if (code != null) this.code = code;
+  }
+
+  public void verify() {
+    this.status = ProofStatus.verified;
+  }
+
+  public void fail() {
+    this.status = ProofStatus.failed;
+  }
+
+  public void incrementLikes() {
+    this.likes++;
+  }
+
+  public void decrementLikes() {
+    if (this.likes > 0) {
+      this.likes--;
+    }
+  }
 }
