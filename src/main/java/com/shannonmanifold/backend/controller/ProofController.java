@@ -1,7 +1,12 @@
 package com.shannonmanifold.backend.controller;
 
+import com.shannonmanifold.backend.dto.ProofResponse;
+import com.shannonmanifold.backend.service.ProofService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 증명(Proof) 관련 API를 처리하는 컨트롤러
@@ -9,11 +14,15 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v1/proofs")
+@RequiredArgsConstructor
 public class ProofController {
 
+    private final ProofService proofService;
+
     @GetMapping
-    public ResponseEntity<?> getProofs() {
-        return ResponseEntity.ok("증명 목록 조회 성공");
+    public ResponseEntity<List<ProofResponse>> getProofs() {
+        List<ProofResponse> proofs = proofService.getAllProofs();
+        return ResponseEntity.ok(proofs);
     }
 
     @GetMapping("/{proofId}")
