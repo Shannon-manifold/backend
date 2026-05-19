@@ -20,57 +20,57 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProofController {
 
-    private final ProofService proofService;
+  private final ProofService proofService;
 
-    @GetMapping
-    public ResponseEntity<List<ProofResponse>> getProofs() {
-        List<ProofResponse> proofs = proofService.getAllProofs();
-        return ResponseEntity.ok(proofs);
-    }
+  @GetMapping
+  public ResponseEntity<List<ProofResponse>> getProofs() {
+    List<ProofResponse> proofs = proofService.getAllProofs();
+    return ResponseEntity.ok(proofs);
+  }
 
-    @GetMapping("/{proofId}")
-    public ResponseEntity<?> getProof(@PathVariable Long proofId) {
-        ProofDetailResponse response = proofService.getProofDetail(proofId);
-        if (response == null)
-            return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(response);
-    }
+  @GetMapping("/{proofId}")
+  public ResponseEntity<?> getProof(@PathVariable Long proofId) {
+    ProofDetailResponse response = proofService.getProofDetail(proofId);
+    if (response == null)
+      return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(response);
+  }
 
-    @PostMapping
-    public ResponseEntity<ProofDetailResponse> createProof(@RequestBody ProofCreateRequest request) {
-        ProofDetailResponse response = proofService.createProof(request);
-        return ResponseEntity.status(201).body(response);
-    }
+  @PostMapping
+  public ResponseEntity<ProofDetailResponse> createProof(@RequestBody ProofCreateRequest request) {
+    ProofDetailResponse response = proofService.createProof(request);
+    return ResponseEntity.status(201).body(response);
+  }
 
-    @PutMapping("/{proofId}")
-    public ResponseEntity<ProofDetailResponse> updateProof(
-            @PathVariable Long proofId,
-            @RequestBody ProofUpdateRequest request) {
-        ProofDetailResponse response = proofService.updateProof(proofId, request);
-        return ResponseEntity.ok(response);
-    }
+  @PutMapping("/{proofId}")
+  public ResponseEntity<ProofDetailResponse> updateProof(
+      @PathVariable Long proofId,
+      @RequestBody ProofUpdateRequest request) {
+    ProofDetailResponse response = proofService.updateProof(proofId, request);
+    return ResponseEntity.ok(response);
+  }
 
-    @DeleteMapping("/{proofId}")
-    public ResponseEntity<Void> deleteProof(@PathVariable Long proofId) {
-        proofService.deleteProof(proofId);
-        return ResponseEntity.noContent().build();
-    }
+  @DeleteMapping("/{proofId}")
+  public ResponseEntity<Void> deleteProof(@PathVariable Long proofId) {
+    proofService.deleteProof(proofId);
+    return ResponseEntity.noContent().build();
+  }
 
-    @PostMapping("/{proofId}/verify")
-    public ResponseEntity<ProofDetailResponse> verifyProof(@PathVariable Long proofId) {
-        ProofDetailResponse response = proofService.verifyProof(proofId);
-        return ResponseEntity.ok(response);
-    }
+  @PostMapping("/{proofId}/verify")
+  public ResponseEntity<ProofDetailResponse> verifyProof(@PathVariable Long proofId) {
+    ProofDetailResponse response = proofService.verifyProof(proofId);
+    return ResponseEntity.ok(response);
+  }
 
-    @PostMapping("/{proofId}/like")
-    public ResponseEntity<ProofDetailResponse> toggleLike(@PathVariable Long proofId) {
-        ProofDetailResponse response = proofService.toggleLike(proofId);
-        return ResponseEntity.ok(response);
-    }
+  @PostMapping("/{proofId}/like")
+  public ResponseEntity<ProofDetailResponse> toggleLike(@PathVariable Long proofId) {
+    ProofDetailResponse response = proofService.toggleLike(proofId);
+    return ResponseEntity.ok(response);
+  }
 
-    @PostMapping("/{proofId}/bookmarks")
-    public ResponseEntity<?> toggleBookmark(@PathVariable Long proofId) {
-        // TODO: Bookmark 엔티티 구현 후 연결 필요
-        return ResponseEntity.ok("증명 북마크 기능은 아직 준비 중입니다.");
-    }
+  @PostMapping("/{proofId}/bookmarks")
+  public ResponseEntity<?> toggleBookmark(@PathVariable Long proofId) {
+    // TODO: Bookmark 엔티티 구현 후 연결 필요
+    return ResponseEntity.ok("증명 북마크 기능은 아직 준비 중입니다.");
+  }
 }
