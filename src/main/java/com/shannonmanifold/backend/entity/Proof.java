@@ -4,7 +4,11 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+
+enum ProofStatus {
+  verified, pending, failed
+}
 
 @Entity
 @Table(name = "proofs")
@@ -12,23 +16,44 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Proof {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // DB에서는 Long(BIGINT)을 사용
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    private String title;
-    private String description;
+  @Column(nullable = false)
+  private String title;
 
-    @Column(name = "status", length = 20)
-    private String status; // "verified", "pending", "failed"
+  @Column(columnDefinition = "TEXT")
+  private String description;
 
-    private String prover;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private ProofStatus status;
 
-    private String language; // "Lean 4", "Rocq" 등
+  @Column(name = "prover_id")
+  private Long proverId;
 
-    private int likes;
-    private int comments;
+  @Column(name = "prover_name")
+  private String proverName;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+  @Column(length = 100)
+  private String language;
+
+  @Column(columnDefinition = "INT DEFAULT 0")
+  private int likes;
+
+  @Column(name = "comments_count", columnDefinition = "INT DEFAULT 0")
+  private int commentsCount;
+
+  @Column(nullable = false)
+  private LocalDate date;
+
+  @Column(length = 100)
+  private String field;
+
+  @Column(columnDefinition = "TEXT")
+  private String latex;
+
+  @Column(columnDefinition = "LONGTEXT")
+  private String code;
 }
