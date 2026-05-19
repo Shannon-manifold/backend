@@ -13,6 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -110,7 +114,36 @@ public class ProofService {
   public ProofDetailResponse verifyProof(Long proofId) {
     Proof proof = proofRepository.findById(proofId)
         .orElseThrow(() -> new IllegalArgumentException("해당 증명을 찾을 수 없습니다. ID: " + proofId));
-    proof.verify();
+
+    String language = proof.getLanguage();
+    if (language != null && language.toLowerCase().startsWith("lean")) {
+      try {
+        File tempFile = File.createTempFile("proof", ".lean");
+        Files.writeString(tempFile.toPath(), proof.getCode() != null ? proof.getCode() : "");
+
+        ProcessBuilder pb = new ProcessBuilder("lean", tempFile.getAbsolutePath());
+        Process process = pb.start();
+        boolean finished = process.waitFor(30, TimeUnit.SECONDS);
+
+        if (finished && process.exitValue() == 0) {
+          proof.verify();
+        } else {
+          proof.fail();
+        }
+
+        if (tempFile.exists()) {
+          tempFile.delete();
+        }
+      } catch (IOException | InterruptedException e) {
+        proof.fail();
+        if (e instanceof InterruptedException) {
+          Thread.currentThread().interrupt();
+        }
+      }
+    } else {
+      proof.verify();
+    }
+
     return getProofDetail(proof.getId());
   }
 
