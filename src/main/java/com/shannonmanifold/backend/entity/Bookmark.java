@@ -32,7 +32,7 @@ public class Bookmark {
     // Caching fields for performance
     private String title;
     private String author;
-    private String system;
+    private String logicSystem;
     private int likes;
 
     @Column(name = "created_at", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")

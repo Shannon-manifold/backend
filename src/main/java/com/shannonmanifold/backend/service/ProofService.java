@@ -183,7 +183,7 @@ public class ProofService {
           .targetId(proofId)
           .title(proof.getTitle())
           .author(proof.getProverName())
-          .system(proof.getLanguage())
+          .logicSystem(proof.getLanguage())
           .likes(proof.getLikes())
           .build();
       bookmarkRepository.save(bookmark);

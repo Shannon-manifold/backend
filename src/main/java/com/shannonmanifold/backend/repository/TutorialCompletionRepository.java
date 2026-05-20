@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TutorialCompletionRepository extends JpaRepository<TutorialCompletion, Long> {
-    List<TutorialCompletion> findByUserAndStep_Tutorial_Id(User user, Long tutorialId);
+    List<TutorialCompletion> findByUserAndStep_TutorialId(User user, Long tutorialId);
     Optional<TutorialCompletion> findByUserAndStepId(User user, Long stepId);
-    int countByUserAndStep_Tutorial_Id(User user, Long tutorialId);
+    int countByUserAndStep_TutorialId(User user, Long tutorialId);
 }

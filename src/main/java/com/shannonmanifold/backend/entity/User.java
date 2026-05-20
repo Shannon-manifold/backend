@@ -33,7 +33,7 @@ public class User {
     private String bio;
 
     @Column(length = 100)
-    private String system;
+    private String preferredSystem;
 
     @Column(name = "join_date", nullable = false)
     private LocalDate joinDate;

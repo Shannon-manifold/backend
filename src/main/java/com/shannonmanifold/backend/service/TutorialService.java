@@ -109,7 +109,7 @@ public class TutorialService {
                                                 .createdAt(LocalDateTime.now())
                                                 .build());
 
-                int completedCount = tutorialCompletionRepository.countByUserAndStep_Tutorial_Id(user, tutorialId);
+                int completedCount = tutorialCompletionRepository.countByUserAndStep_TutorialId(user, tutorialId);
                 int totalCount = tutorial.getLessonsCount();
 
                 progress.updateProgress(completedCount, totalCount, step);
