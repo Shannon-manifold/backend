@@ -1,28 +1,31 @@
 package com.shannonmanifold.backend.controller;
 
+import com.shannonmanifold.backend.dto.*;
+import com.shannonmanifold.backend.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 인증 관련 API를 처리하는 컨트롤러
- * 담당자: 유승민
- */
 @RestController
 @RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
+    private final AuthService authService;
+
     @PostMapping("/register")
-    public ResponseEntity<?> register() {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        authService.register(request);
         return ResponseEntity.ok("회원가입 성공");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login() {
-        return ResponseEntity.ok("로그인 성공");
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh() {
-        return ResponseEntity.ok("리프레시 성공");
+    public ResponseEntity<LoginResponse> refresh(@RequestBody RefreshRequest request) {
+        return ResponseEntity.ok(authService.refresh(request.getRefreshToken()));
     }
 }
