@@ -32,12 +32,14 @@ public class TutorialController {
 
     @GetMapping("/users/me/tutorials/progress")
     public ResponseEntity<?> getMyProgress() {
-        return ResponseEntity.ok("나의 진행 상황 조회 기능은 아직 준비 중입니다.");
+        String email = com.shannonmanifold.backend.config.SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.ok(tutorialService.getUserTutorialProgress(email));
     }
 
     @PostMapping("/tutorials/{tutorialId}/steps/{stepId}/complete")
     public ResponseEntity<Void> completeStep(@PathVariable Long tutorialId, @PathVariable Long stepId) {
-        tutorialService.completeStep(tutorialId, stepId);
+        String email = com.shannonmanifold.backend.config.SecurityUtils.getCurrentUserEmail();
+        tutorialService.completeStep(tutorialId, stepId, email);
         return ResponseEntity.ok().build();
     }
 }

@@ -7,8 +7,14 @@ import java.time.LocalDate;
 
 import com.shannonmanifold.backend.dto.ProofDetailResponse;
 import com.shannonmanifold.backend.dto.ProofResponse;
+import com.shannonmanifold.backend.entity.Bookmark;
+import com.shannonmanifold.backend.entity.BookmarkType;
+import com.shannonmanifold.backend.entity.User;
 import com.shannonmanifold.backend.entity.Proof;
+import com.shannonmanifold.backend.repository.BookmarkRepository;
 import com.shannonmanifold.backend.repository.ProofRepository;
+import com.shannonmanifold.backend.repository.UserRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +32,8 @@ import java.util.stream.Collectors;
 public class ProofService {
 
   private final ProofRepository proofRepository;
+  private final BookmarkRepository bookmarkRepository;
+  private final UserRepository userRepository;
 
   public List<ProofResponse> getAllProofs() {
     List<Proof> proofs = proofRepository.findAll();
@@ -154,5 +162,32 @@ public class ProofService {
     // 임시로 무조건 좋아요 증가 (실제로는 User-Like 매핑 테이블 확인 후 토글 구현 필요)
     proof.incrementLikes();
     return getProofDetail(proof.getId());
+  }
+
+  @Transactional
+  public boolean toggleBookmark(Long proofId, String email) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다. Email: " + email));
+    Proof proof = proofRepository.findById(proofId)
+        .orElseThrow(() -> new IllegalArgumentException("해당 증명을 찾을 수 없습니다. ID: " + proofId));
+
+    Optional<Bookmark> bookmarkOpt = bookmarkRepository.findByUserAndTargetTypeAndTargetId(user, BookmarkType.proof, proofId);
+
+    if (bookmarkOpt.isPresent()) {
+      bookmarkRepository.delete(bookmarkOpt.get());
+      return false; // Bookmarked removed
+    } else {
+      Bookmark bookmark = Bookmark.builder()
+          .user(user)
+          .targetType(BookmarkType.proof)
+          .targetId(proofId)
+          .title(proof.getTitle())
+          .author(proof.getProverName())
+          .system(proof.getLanguage())
+          .likes(proof.getLikes())
+          .build();
+      bookmarkRepository.save(bookmark);
+      return true; // Bookmarked added
+    }
   }
 }

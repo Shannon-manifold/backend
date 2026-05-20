@@ -70,7 +70,9 @@ public class ProofController {
 
   @PostMapping("/{proofId}/bookmarks")
   public ResponseEntity<?> toggleBookmark(@PathVariable Long proofId) {
-    // TODO: Bookmark 엔티티 구현 후 연결 필요
-    return ResponseEntity.ok("증명 북마크 기능은 아직 준비 중입니다.");
+    String email = com.shannonmanifold.backend.config.SecurityUtils.getCurrentUserEmail();
+    boolean added = proofService.toggleBookmark(proofId, email);
+    String message = added ? "증명 북마크 추가 성공" : "증명 북마크 제거 성공";
+    return ResponseEntity.ok(message);
   }
 }
