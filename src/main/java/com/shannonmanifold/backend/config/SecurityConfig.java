@@ -33,7 +33,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll() // 로그인/회원가입은 허용
+                .requestMatchers("/", "/api/v1/auth/**").permitAll() // 메인 및 로그인/회원가입 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/blogs/**").permitAll() // 블로그 조회 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/challenges/**").permitAll() // 챌린지 조회 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/tutorials/**").permitAll() // 튜토리얼 조회 허용
