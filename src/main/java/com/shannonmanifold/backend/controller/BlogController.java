@@ -1,7 +1,16 @@
 package com.shannonmanifold.backend.controller;
 
+import com.shannonmanifold.backend.config.SecurityUtils;
+import com.shannonmanifold.backend.dto.BlogPostCreateRequest;
+import com.shannonmanifold.backend.dto.BlogPostDetailResponse;
+import com.shannonmanifold.backend.dto.BlogPostResponse;
+import com.shannonmanifold.backend.dto.BlogPostUpdateRequest;
+import com.shannonmanifold.backend.service.BlogService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 블로그 관련 API를 처리하는 컨트롤러
@@ -9,25 +18,55 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v1/blogs")
+@RequiredArgsConstructor
 public class BlogController {
 
+    private final BlogService blogService;
+
     @GetMapping
-    public ResponseEntity<?> getBlogs() {
-        return ResponseEntity.ok("블로그 목록 조회 성공");
+    public ResponseEntity<List<BlogPostResponse>> getBlogs(
+            @RequestParam(required = false) String category) {
+        List<BlogPostResponse> posts = (category != null && !category.isBlank())
+                ? blogService.getPostsByCategory(category)
+                : blogService.getAllPosts();
+        return ResponseEntity.ok(posts);
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<?> getBlog(@PathVariable Long postId) {
-        return ResponseEntity.ok("블로그 상세 조회 성공");
+    public ResponseEntity<BlogPostDetailResponse> getBlog(@PathVariable Long postId) {
+        return ResponseEntity.ok(blogService.getPost(postId));
     }
 
     @PostMapping
-    public ResponseEntity<?> createBlog() {
-        return ResponseEntity.ok("블로그 작성 성공");
+    public ResponseEntity<BlogPostDetailResponse> createBlog(@RequestBody BlogPostCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.status(201).body(blogService.createPost(request, email));
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<?> updateBlog(@PathVariable Long postId) {
-        return ResponseEntity.ok("블로그 수정 성공");
+    public ResponseEntity<BlogPostDetailResponse> updateBlog(
+            @PathVariable Long postId,
+            @RequestBody BlogPostUpdateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.ok(blogService.updatePost(postId, request, email));
+    }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deleteBlog(@PathVariable Long postId) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        blogService.deletePost(postId, email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<BlogPostDetailResponse> toggleLike(@PathVariable Long postId) {
+        return ResponseEntity.ok(blogService.toggleLike(postId));
+    }
+
+    @PostMapping("/{postId}/bookmarks")
+    public ResponseEntity<String> toggleBookmark(@PathVariable Long postId) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        boolean added = blogService.toggleBookmark(postId, email);
+        return ResponseEntity.ok(added ? "블로그 북마크 추가 성공" : "블로그 북마크 제거 성공");
     }
 }
