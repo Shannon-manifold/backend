@@ -1,7 +1,18 @@
 package com.shannonmanifold.backend.controller;
 
+import com.shannonmanifold.backend.config.SecurityUtils;
+import com.shannonmanifold.backend.dto.AnswerCreateRequest;
+import com.shannonmanifold.backend.dto.AnswerResponse;
+import com.shannonmanifold.backend.dto.QuestionCreateRequest;
+import com.shannonmanifold.backend.dto.QuestionDetailResponse;
+import com.shannonmanifold.backend.dto.QuestionResponse;
+import com.shannonmanifold.backend.dto.QuestionUpdateRequest;
+import com.shannonmanifold.backend.service.QuestionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 질문 관련 API를 처리하는 컨트롤러
@@ -9,45 +20,70 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v1/questions")
+@RequiredArgsConstructor
 public class QuestionController {
 
+    private final QuestionService questionService;
+
     @GetMapping
-    public ResponseEntity<?> getQuestions() {
-        return ResponseEntity.ok("질문 목록 조회 성공");
+    public ResponseEntity<List<QuestionResponse>> getQuestions() {
+        return ResponseEntity.ok(questionService.getAllQuestions());
     }
 
     @GetMapping("/{questionId}")
-    public ResponseEntity<?> getQuestion(@PathVariable Long questionId) {
-        return ResponseEntity.ok("질문 상세 조회 성공");
+    public ResponseEntity<QuestionDetailResponse> getQuestion(@PathVariable Long questionId) {
+        return ResponseEntity.ok(questionService.getQuestion(questionId));
     }
 
     @PostMapping
-    public ResponseEntity<?> createQuestion() {
-        return ResponseEntity.ok("질문 작성 성공");
+    public ResponseEntity<QuestionDetailResponse> createQuestion(@RequestBody QuestionCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.status(201).body(questionService.createQuestion(request, email));
     }
 
     @PutMapping("/{questionId}")
-    public ResponseEntity<?> updateQuestion(@PathVariable Long questionId) {
-        return ResponseEntity.ok("질문 수정 성공");
+    public ResponseEntity<QuestionDetailResponse> updateQuestion(
+            @PathVariable Long questionId,
+            @RequestBody QuestionUpdateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.ok(questionService.updateQuestion(questionId, request, email));
+    }
+
+    @DeleteMapping("/{questionId}")
+    public ResponseEntity<Void> deleteQuestion(@PathVariable Long questionId) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        questionService.deleteQuestion(questionId, email);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{questionId}/answers")
-    public ResponseEntity<?> createAnswer(@PathVariable Long questionId) {
-        return ResponseEntity.ok("답변 작성 성공");
+    public ResponseEntity<AnswerResponse> createAnswer(
+            @PathVariable Long questionId,
+            @RequestBody AnswerCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.status(201).body(questionService.createAnswer(questionId, request, email));
     }
 
     @PostMapping("/answers/{answerId}/accept")
-    public ResponseEntity<?> acceptAnswer(@PathVariable Long answerId) {
-        return ResponseEntity.ok("답변 채택 성공");
+    public ResponseEntity<AnswerResponse> acceptAnswer(@PathVariable Long answerId) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.ok(questionService.acceptAnswer(answerId, email));
     }
 
     @PostMapping("/{questionId}/like")
-    public ResponseEntity<?> toggleQuestionLike(@PathVariable Long questionId) {
-        return ResponseEntity.ok("질문 좋아요 성공");
+    public ResponseEntity<Integer> toggleQuestionLike(@PathVariable Long questionId) {
+        return ResponseEntity.ok(questionService.toggleQuestionLike(questionId));
     }
 
     @PostMapping("/answers/{answerId}/like")
-    public ResponseEntity<?> toggleAnswerLike(@PathVariable Long answerId) {
-        return ResponseEntity.ok("답변 좋아요 성공");
+    public ResponseEntity<Integer> toggleAnswerLike(@PathVariable Long answerId) {
+        return ResponseEntity.ok(questionService.toggleAnswerLike(answerId));
+    }
+
+    @PostMapping("/{questionId}/bookmarks")
+    public ResponseEntity<String> toggleBookmark(@PathVariable Long questionId) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        boolean added = questionService.toggleBookmark(questionId, email);
+        return ResponseEntity.ok(added ? "질문 북마크 추가 성공" : "질문 북마크 제거 성공");
     }
 }

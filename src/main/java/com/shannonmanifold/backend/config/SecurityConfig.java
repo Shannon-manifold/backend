@@ -35,6 +35,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/api/v1/auth/**").permitAll() // 메인 및 로그인/회원가입 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/blogs/**").permitAll() // 블로그 조회 허용
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/questions/**").permitAll() // 질문/답변 조회 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/challenges/**").permitAll() // 챌린지 조회 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/tutorials/**").permitAll() // 튜토리얼 조회 허용
                 .anyRequest().authenticated() // 그 외 요청은 인증 필요
