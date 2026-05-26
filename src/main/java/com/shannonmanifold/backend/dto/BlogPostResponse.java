@@ -19,5 +19,4 @@ public class BlogPostResponse {
     private String readTime;
     private String category;
     private String imageUrl;
-    private int likes;
 }

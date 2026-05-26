@@ -61,7 +61,6 @@ public class BlogService {
                 .category(request.getCategory())
                 .imageUrl(request.getImageUrl())
                 .content(request.getContent())
-                .likes(0)
                 .build();
 
         return toDetailResponse(blogPostRepository.save(post));
@@ -86,13 +85,6 @@ public class BlogService {
     }
 
     @Transactional
-    public BlogPostDetailResponse toggleLike(Long postId) {
-        BlogPost post = findPostOrThrow(postId);
-        post.incrementLikes();
-        return toDetailResponse(post);
-    }
-
-    @Transactional
     public boolean toggleBookmark(Long postId, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. Email: " + email));
@@ -110,7 +102,6 @@ public class BlogService {
                 .targetId(postId)
                 .title(post.getTitle())
                 .author(post.getAuthorName())
-                .likes(post.getLikes())
                 .build());
         return true;
     }
@@ -138,7 +129,6 @@ public class BlogService {
                 .readTime(post.getReadTime())
                 .category(post.getCategory())
                 .imageUrl(post.getImageUrl())
-                .likes(post.getLikes())
                 .build();
     }
 
@@ -154,7 +144,6 @@ public class BlogService {
                 .category(post.getCategory())
                 .imageUrl(post.getImageUrl())
                 .content(post.getContent())
-                .likes(post.getLikes())
                 .build();
     }
 }

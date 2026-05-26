@@ -58,11 +58,6 @@ public class BlogController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{postId}/like")
-    public ResponseEntity<BlogPostDetailResponse> toggleLike(@PathVariable Long postId) {
-        return ResponseEntity.ok(blogService.toggleLike(postId));
-    }
-
     @PostMapping("/{postId}/bookmarks")
     public ResponseEntity<String> toggleBookmark(@PathVariable Long postId) {
         String email = SecurityUtils.getCurrentUserEmail();

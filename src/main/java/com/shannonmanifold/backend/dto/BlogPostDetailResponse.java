@@ -21,5 +21,4 @@ public class BlogPostDetailResponse {
     private String category;
     private String imageUrl;
     private String content;
-    private int likes;
 }

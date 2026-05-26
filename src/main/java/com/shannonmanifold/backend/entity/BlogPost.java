@@ -43,9 +43,6 @@ public class BlogPost {
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
-    @Column(columnDefinition = "INT DEFAULT 0")
-    private int likes;
-
     public void update(String title, String excerpt, String readTime, String category, String imageUrl, String content) {
         if (title != null) this.title = title;
         if (excerpt != null) this.excerpt = excerpt;
@@ -53,13 +50,5 @@ public class BlogPost {
         if (category != null) this.category = category;
         if (imageUrl != null) this.imageUrl = imageUrl;
         if (content != null) this.content = content;
-    }
-
-    public void incrementLikes() {
-        this.likes++;
-    }
-
-    public void decrementLikes() {
-        if (this.likes > 0) this.likes--;
     }
 }
