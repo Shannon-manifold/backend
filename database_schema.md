@@ -255,4 +255,17 @@ CREATE TABLE `refresh_tokens` (
   
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ------------------------------------------------------------------------------
+-- 11. Notifications (PR #31 대응을 위해 추가 필요)
+-- ------------------------------------------------------------------------------
+CREATE TABLE `notifications` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` BIGINT NOT NULL, -- 알림을 받는 사용자 (users 테이블 참조)
+  `type` VARCHAR(100) NOT NULL, -- NotificationType 열거형 대응 (예: 'ANSWER', 'LIKE' 등)
+  `message` TEXT NOT NULL, -- 알림 본문 내용
+  `is_read` BOOLEAN DEFAULT FALSE, -- 읽음 여부 (PR의 읽음 처리 로직 대응)
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
