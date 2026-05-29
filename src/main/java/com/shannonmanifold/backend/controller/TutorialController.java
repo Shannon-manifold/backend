@@ -42,4 +42,12 @@ public class TutorialController {
         tutorialService.completeStep(tutorialId, stepId, email);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/tutorials/{tutorialId}/bookmarks")
+    public ResponseEntity<?> toggleBookmark(@PathVariable Long tutorialId) {
+        String email = com.shannonmanifold.backend.config.SecurityUtils.getCurrentUserEmail();
+        boolean added = tutorialService.toggleBookmark(tutorialId, email);
+        String message = added ? "튜토리얼 북마크 추가 성공" : "튜토리얼 북마크 제거 성공";
+        return ResponseEntity.ok(message);
+    }
 }

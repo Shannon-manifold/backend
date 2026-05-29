@@ -12,15 +12,19 @@ import com.shannonmanifold.backend.entity.QnaAnswer;
 import com.shannonmanifold.backend.entity.QnaQuestion;
 import com.shannonmanifold.backend.entity.QnaStatus;
 import com.shannonmanifold.backend.entity.User;
+import com.shannonmanifold.backend.entity.Notification;
+import com.shannonmanifold.backend.entity.NotificationType;
 import com.shannonmanifold.backend.repository.BookmarkRepository;
 import com.shannonmanifold.backend.repository.QnaAnswerRepository;
 import com.shannonmanifold.backend.repository.QnaQuestionRepository;
 import com.shannonmanifold.backend.repository.UserRepository;
+import com.shannonmanifold.backend.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +40,7 @@ public class QuestionService {
     private final QnaAnswerRepository answerRepository;
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
     public List<QuestionResponse> getAllQuestions() {
         return questionRepository.findAllByOrderByDateDesc().stream()
@@ -108,6 +113,23 @@ public class QuestionService {
 
         QnaAnswer saved = answerRepository.save(answer);
         question.incrementAnswersCount();
+
+        if (!question.getAuthorId().equals(author.getId())) {
+            Optional<User> questionAuthor = userRepository.findById(question.getAuthorId());
+            if (questionAuthor.isPresent()) {
+                Notification notification = Notification.builder()
+                        .user(questionAuthor.get())
+                        .type(NotificationType.answer)
+                        .title("새 답변")
+                        .message("\"" + question.getTitle() + "\" 질문에 답변이 달렸습니다.")
+                        .targetType("qna")
+                        .targetId(question.getId())
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                notificationRepository.save(notification);
+            }
+        }
 
         return toAnswerResponse(saved);
     }

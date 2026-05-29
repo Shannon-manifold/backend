@@ -73,4 +73,11 @@ public class User {
 
     @Column(name = "updated_at", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
+
+    public void updateProfile(String name, String bio, String avatarUrl, String preferredSystem) {
+        if (name != null && !name.isBlank()) this.name = name;
+        if (bio != null) this.bio = bio;
+        if (avatarUrl != null) this.avatarUrl = avatarUrl;
+        if (preferredSystem != null) this.preferredSystem = preferredSystem;
+    }
 }

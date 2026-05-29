@@ -25,6 +25,7 @@ public class TutorialService {
         private final TutorialCompletionRepository tutorialCompletionRepository;
         private final UserTutorialProgressRepository userTutorialProgressRepository;
         private final UserRepository userRepository;
+        private final BookmarkRepository bookmarkRepository;
 
         public List<TutorialResponse> getAllTutorials() {
                 return tutorialRepository.findAll().stream()
@@ -130,5 +131,30 @@ public class TutorialService {
                                                 .updatedAt(p.getUpdatedAt() != null ? p.getUpdatedAt().toString() : null)
                                                 .build())
                                 .collect(Collectors.toList());
+        }
+
+        @Transactional
+        public boolean toggleBookmark(Long tutorialId, String email) {
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다. Email: " + email));
+                Tutorial tutorial = tutorialRepository.findById(tutorialId)
+                                .orElseThrow(() -> new IllegalArgumentException("해당 튜토리얼을 찾을 수 없습니다. ID: " + tutorialId));
+
+                Optional<Bookmark> bookmarkOpt = bookmarkRepository.findByUserAndTargetTypeAndTargetId(user, BookmarkType.tutorial, tutorialId);
+
+                if (bookmarkOpt.isPresent()) {
+                        bookmarkRepository.delete(bookmarkOpt.get());
+                        return false;
+                } else {
+                        Bookmark bookmark = Bookmark.builder()
+                                        .user(user)
+                                        .targetType(BookmarkType.tutorial)
+                                        .targetId(tutorialId)
+                                        .title(tutorial.getTitle())
+                                        .author(tutorial.getAuthorName())
+                                        .build();
+                        bookmarkRepository.save(bookmark);
+                        return true;
+                }
         }
 }

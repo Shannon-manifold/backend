@@ -28,13 +28,21 @@ public class AuthService {
   private final JwtProvider jwtProvider;
 
   @Transactional
-  public void register(RegisterRequest request) {
+  public User register(RegisterRequest request) {
     if (userRepository.findByEmail(request.getEmail()).isPresent()) {
       throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
     }
 
+    String finalName = request.getName();
+    if (finalName == null || finalName.isBlank()) {
+      finalName = request.getNickname();
+    }
+    if (finalName == null || finalName.isBlank()) {
+      finalName = "Unknown";
+    }
+
     User user = User.builder()
-        .name(request.getName())
+        .name(finalName)
         .email(request.getEmail())
         .password(passwordEncoder.encode(request.getPassword()))
         .joinDate(LocalDate.now())
@@ -42,7 +50,7 @@ public class AuthService {
         .createdAt(LocalDateTime.now())
         .build();
 
-    userRepository.save(user);
+    return userRepository.save(user);
   }
 
   @Transactional
