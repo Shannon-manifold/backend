@@ -1,5 +1,6 @@
 package com.shannonmanifold.backend.controller;
 
+import com.shannonmanifold.backend.config.SecurityUtils;
 import com.shannonmanifold.backend.dto.ProofCreateRequest;
 import com.shannonmanifold.backend.dto.ProofUpdateRequest;
 import com.shannonmanifold.backend.dto.ProofDetailResponse;
@@ -38,7 +39,8 @@ public class ProofController {
 
   @PostMapping
   public ResponseEntity<ProofDetailResponse> createProof(@RequestBody ProofCreateRequest request) {
-    ProofDetailResponse response = proofService.createProof(request);
+    String email = SecurityUtils.getCurrentUserEmail();
+    ProofDetailResponse response = proofService.createProof(request, email);
     return ResponseEntity.status(201).body(response);
   }
 
@@ -46,19 +48,22 @@ public class ProofController {
   public ResponseEntity<ProofDetailResponse> updateProof(
       @PathVariable Long proofId,
       @RequestBody ProofUpdateRequest request) {
-    ProofDetailResponse response = proofService.updateProof(proofId, request);
+    String email = SecurityUtils.getCurrentUserEmail();
+    ProofDetailResponse response = proofService.updateProof(proofId, request, email);
     return ResponseEntity.ok(response);
   }
 
   @DeleteMapping("/{proofId}")
   public ResponseEntity<Void> deleteProof(@PathVariable Long proofId) {
-    proofService.deleteProof(proofId);
+    String email = SecurityUtils.getCurrentUserEmail();
+    proofService.deleteProof(proofId, email);
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/{proofId}/verify")
   public ResponseEntity<ProofDetailResponse> verifyProof(@PathVariable Long proofId) {
-    ProofDetailResponse response = proofService.verifyProof(proofId);
+    String email = SecurityUtils.getCurrentUserEmail();
+    ProofDetailResponse response = proofService.verifyProof(proofId, email);
     return ResponseEntity.ok(response);
   }
 
@@ -70,7 +75,7 @@ public class ProofController {
 
   @PostMapping("/{proofId}/bookmarks")
   public ResponseEntity<?> toggleBookmark(@PathVariable Long proofId) {
-    String email = com.shannonmanifold.backend.config.SecurityUtils.getCurrentUserEmail();
+    String email = SecurityUtils.getCurrentUserEmail();
     boolean added = proofService.toggleBookmark(proofId, email);
     String message = added ? "증명 북마크 추가 성공" : "증명 북마크 제거 성공";
     return ResponseEntity.ok(message);

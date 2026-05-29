@@ -77,7 +77,10 @@ public class ProofService {
   }
 
   @Transactional
-  public ProofDetailResponse createProof(ProofCreateRequest request) {
+  public ProofDetailResponse createProof(ProofCreateRequest request, String email) {
+    User prover = userRepository.findByEmail(email)
+        .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. Email: " + email));
+
     Proof proof = Proof.builder()
         .title(request.getTitle())
         .description(request.getDescription())
@@ -89,9 +92,8 @@ public class ProofService {
         .date(LocalDate.now())
         .likes(0)
         .commentsCount(0)
-        // Todo: Extract proverId and proverName from authentication context
-        .proverId(1L)
-        .proverName("Current User")
+        .proverId(prover.getId())
+        .proverName(prover.getName())
         .build();
 
     Proof savedProof = proofRepository.save(proof);
@@ -100,9 +102,10 @@ public class ProofService {
   }
 
   @Transactional
-  public ProofDetailResponse updateProof(Long proofId, ProofUpdateRequest request) {
+  public ProofDetailResponse updateProof(Long proofId, ProofUpdateRequest request, String email) {
     Proof proof = proofRepository.findById(proofId)
         .orElseThrow(() -> new IllegalArgumentException("해당 증명을 찾을 수 없습니다. ID: " + proofId));
+    validateProver(proof.getProverId(), email);
 
     proof.update(request.getTitle(), request.getDescription(), request.getLanguage(), request.getField(),
         request.getLatex(), request.getCode());
@@ -112,16 +115,18 @@ public class ProofService {
   }
 
   @Transactional
-  public void deleteProof(Long proofId) {
+  public void deleteProof(Long proofId, String email) {
     Proof proof = proofRepository.findById(proofId)
         .orElseThrow(() -> new IllegalArgumentException("해당 증명을 찾을 수 없습니다. ID: " + proofId));
+    validateProver(proof.getProverId(), email);
     proofRepository.delete(proof);
   }
 
   @Transactional
-  public ProofDetailResponse verifyProof(Long proofId) {
+  public ProofDetailResponse verifyProof(Long proofId, String email) {
     Proof proof = proofRepository.findById(proofId)
         .orElseThrow(() -> new IllegalArgumentException("해당 증명을 찾을 수 없습니다. ID: " + proofId));
+    validateProver(proof.getProverId(), email);
 
     String language = proof.getLanguage();
     if (language != null && language.toLowerCase().startsWith("lean")) {
@@ -188,6 +193,14 @@ public class ProofService {
           .build();
       bookmarkRepository.save(bookmark);
       return true; // Bookmarked added
+    }
+  }
+
+  private void validateProver(Long proverId, String email) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. Email: " + email));
+    if (proverId == null || !proverId.equals(user.getId())) {
+      throw new IllegalStateException("본인이 작성한 증명만 수정/삭제/검증할 수 있습니다.");
     }
   }
 }
