@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface QnaAnswerRepository extends JpaRepository<QnaAnswer, Long> {
     List<QnaAnswer> findByQuestionIdOrderByAcceptedDescDateAsc(Long questionId);
+    List<QnaAnswer> findByAuthorId(Long authorId);
 }
