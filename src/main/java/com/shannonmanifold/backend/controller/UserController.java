@@ -11,6 +11,10 @@ import com.shannonmanifold.backend.repository.UserRepository;
 import com.shannonmanifold.backend.repository.ProofRepository;
 import com.shannonmanifold.backend.repository.QnaAnswerRepository;
 import com.shannonmanifold.backend.repository.QnaQuestionRepository;
+import com.shannonmanifold.backend.repository.BookmarkRepository;
+import com.shannonmanifold.backend.dto.BookmarkResponse;
+import com.shannonmanifold.backend.entity.Bookmark;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +35,7 @@ public class UserController {
     private final ProofRepository proofRepository;
     private final QnaAnswerRepository qnaAnswerRepository;
     private final QnaQuestionRepository qnaQuestionRepository;
+    private final BookmarkRepository bookmarkRepository;
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyProfile() {
@@ -41,21 +46,88 @@ public class UserController {
     }
 
     @PutMapping("/me")
+    @Transactional
     public ResponseEntity<?> updateMyProfile(@RequestBody Map<String, String> request) {
         String email = SecurityUtils.getCurrentUserEmail();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("로그인한 사용자 정보를 찾을 수 없습니다."));
-        return ResponseEntity.ok("나의 프로필 수정 성공");
+
+        String newName = request.get("nickname");
+        if (newName == null) {
+            newName = request.get("name");
+        }
+        String newBio = request.get("bio");
+        String newAvatarUrl = request.get("profileImageUrl");
+        if (newAvatarUrl == null) {
+            newAvatarUrl = request.get("avatarUrl");
+        }
+        String newPreferredSystem = request.get("preferredSystem");
+        if (newPreferredSystem == null) {
+            newPreferredSystem = request.get("system");
+        }
+
+        user.updateProfile(newName, newBio, newAvatarUrl, newPreferredSystem);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(convertToResponse(user));
     }
 
     @GetMapping("/me/activities")
     public ResponseEntity<?> getMyActivities() {
-        return ResponseEntity.ok("나의 활동 조회 성공");
+        String email = SecurityUtils.getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("로그인한 사용자 정보를 찾을 수 없습니다."));
+
+        List<UserResponse.RecentActivityDto> recentActivities = new ArrayList<>();
+
+        List<Proof> proofs = proofRepository.findByProverId(user.getId());
+        for (Proof proof : proofs) {
+            recentActivities.add(UserResponse.RecentActivityDto.builder()
+                .type("proof")
+                .title(proof.getTitle())
+                .date(proof.getDate() != null ? proof.getDate().toString() : "")
+                .build());
+        }
+
+        List<QnaAnswer> answers = qnaAnswerRepository.findByAuthorId(user.getId());
+        for (QnaAnswer answer : answers) {
+            String title = "답변: " + (answer.getContent().length() > 30 ? answer.getContent().substring(0, 30) + "..." : answer.getContent());
+            Optional<QnaQuestion> question = qnaQuestionRepository.findById(answer.getQuestionId());
+            if (question.isPresent()) {
+                title = "답변: " + question.get().getTitle();
+            }
+            recentActivities.add(UserResponse.RecentActivityDto.builder()
+                .type("answer")
+                .title(title)
+                .date(answer.getDate() != null ? answer.getDate().toString() : "")
+                .build());
+        }
+
+        recentActivities.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+
+        return ResponseEntity.ok(recentActivities);
     }
 
     @GetMapping("/me/bookmarks")
     public ResponseEntity<?> getMyBookmarks() {
-        return ResponseEntity.ok("나의 북마크 조회 성공");
+        String email = SecurityUtils.getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("로그인한 사용자 정보를 찾을 수 없습니다."));
+
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserOrderByCreatedAtDesc(user);
+        List<BookmarkResponse> responses = bookmarks.stream()
+                .map(b -> BookmarkResponse.builder()
+                        .id(b.getId())
+                        .targetType(b.getTargetType().name())
+                        .targetId(b.getTargetId())
+                        .title(b.getTitle())
+                        .author(b.getAuthor())
+                        .logicSystem(b.getLogicSystem())
+                        .likes(b.getLikes())
+                        .createdAt(b.getCreatedAt() != null ? b.getCreatedAt().toString() : "")
+                        .build())
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{userId}")

@@ -1,6 +1,7 @@
 package com.shannonmanifold.backend.controller;
 
 import com.shannonmanifold.backend.dto.*;
+import com.shannonmanifold.backend.entity.User;
 import com.shannonmanifold.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +19,14 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        authService.register(request);
-        return ResponseEntity.ok("회원가입 성공");
+    public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
+        User user = authService.register(request);
+        RegisterResponse response = RegisterResponse.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getName())
+                .build();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")

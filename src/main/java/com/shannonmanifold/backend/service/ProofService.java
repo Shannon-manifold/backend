@@ -11,10 +11,16 @@ import com.shannonmanifold.backend.entity.Bookmark;
 import com.shannonmanifold.backend.entity.BookmarkType;
 import com.shannonmanifold.backend.entity.User;
 import com.shannonmanifold.backend.entity.Proof;
+import com.shannonmanifold.backend.entity.Notification;
+import com.shannonmanifold.backend.entity.NotificationType;
+import com.shannonmanifold.backend.entity.ProofLike;
 import com.shannonmanifold.backend.repository.BookmarkRepository;
 import com.shannonmanifold.backend.repository.ProofRepository;
 import com.shannonmanifold.backend.repository.UserRepository;
+import com.shannonmanifold.backend.repository.NotificationRepository;
+import com.shannonmanifold.backend.repository.ProofLikeRepository;
 import java.util.Optional;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +40,8 @@ public class ProofService {
   private final ProofRepository proofRepository;
   private final BookmarkRepository bookmarkRepository;
   private final UserRepository userRepository;
+  private final NotificationRepository notificationRepository;
+  private final ProofLikeRepository proofLikeRepository;
 
   public List<ProofResponse> getAllProofs() {
     List<Proof> proofs = proofRepository.findAll();
@@ -164,8 +172,46 @@ public class ProofService {
   public ProofDetailResponse toggleLike(Long proofId) {
     Proof proof = proofRepository.findById(proofId)
         .orElseThrow(() -> new IllegalArgumentException("해당 증명을 찾을 수 없습니다. ID: " + proofId));
-    // 임시로 무조건 좋아요 증가 (실제로는 User-Like 매핑 테이블 확인 후 토글 구현 필요)
-    proof.incrementLikes();
+
+    String email = com.shannonmanifold.backend.config.SecurityUtils.getCurrentUserEmail();
+    if (email != null && !email.equals("anonymousUser") && !email.isBlank()) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. Email: " + email));
+
+        Optional<ProofLike> existingLike = proofLikeRepository.findByUserAndProof(user, proof);
+
+        if (existingLike.isPresent()) {
+            proofLikeRepository.delete(existingLike.get());
+            proof.decrementLikes();
+        } else {
+            ProofLike proofLike = ProofLike.builder()
+                .user(user)
+                .proof(proof)
+                .build();
+            proofLikeRepository.save(proofLike);
+            proof.incrementLikes();
+
+            if (!user.getId().equals(proof.getProverId())) {
+                Optional<User> prover = userRepository.findById(proof.getProverId());
+                if (prover.isPresent()) {
+                    Notification notification = Notification.builder()
+                            .user(prover.get())
+                            .type(NotificationType.like)
+                            .title("좋아요")
+                            .message(user.getName() + " 님이 회원님의 증명에 좋아요를 눌렀습니다.")
+                            .targetType("proof")
+                            .targetId(proof.getId())
+                            .isRead(false)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    notificationRepository.save(notification);
+                }
+            }
+        }
+    } else {
+        proof.incrementLikes();
+    }
+
     return getProofDetail(proof.getId());
   }
 
