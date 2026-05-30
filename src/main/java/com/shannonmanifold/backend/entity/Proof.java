@@ -88,4 +88,10 @@ public class Proof {
   public void incrementCommentsCount() {
     this.commentsCount++;
   }
+
+  public void decrementCommentsCount() {
+    if (this.commentsCount > 0) {
+      this.commentsCount--;
+    }
+  }
 }

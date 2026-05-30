@@ -65,6 +65,12 @@ public class QnaQuestion {
         this.answersCount++;
     }
 
+    public void decrementAnswersCount() {
+        if (this.answersCount > 0) {
+            this.answersCount--;
+        }
+    }
+
     public void incrementViews() {
         this.views++;
     }

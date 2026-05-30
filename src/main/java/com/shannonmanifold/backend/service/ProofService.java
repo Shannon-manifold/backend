@@ -295,4 +295,33 @@ public class ProofService {
         .date(saved.getCreatedAt() != null ? saved.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
         .build();
   }
+
+  @Transactional
+  public CommentResponse updateComment(Long commentId, CommentCreateRequest request, String email) {
+    ProofComment comment = proofCommentRepository.findById(commentId)
+        .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다. ID: " + commentId));
+    validateProver(comment.getUser().getId(), email);
+
+    comment.update(request.getContent());
+
+    return CommentResponse.builder()
+        .id(comment.getId())
+        .proofId(comment.getProof().getId())
+        .authorId(comment.getUser().getId())
+        .authorName(comment.getUser().getName())
+        .content(comment.getContent())
+        .date(comment.getCreatedAt() != null ? comment.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
+        .build();
+  }
+
+  @Transactional
+  public void deleteComment(Long commentId, String email) {
+    ProofComment comment = proofCommentRepository.findById(commentId)
+        .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다. ID: " + commentId));
+    validateProver(comment.getUser().getId(), email);
+
+    Proof proof = comment.getProof();
+    proof.decrementCommentsCount();
+    proofCommentRepository.delete(comment);
+  }
 }

@@ -97,4 +97,20 @@ public class ProofController {
     CommentResponse response = proofService.createComment(proofId, request, email);
     return ResponseEntity.status(201).body(response);
   }
+
+  @PutMapping("/comments/{commentId}")
+  public ResponseEntity<CommentResponse> updateComment(
+      @PathVariable Long commentId,
+      @RequestBody CommentCreateRequest request) {
+    String email = SecurityUtils.getCurrentUserEmail();
+    CommentResponse response = proofService.updateComment(commentId, request, email);
+    return ResponseEntity.ok(response);
+  }
+
+  @DeleteMapping("/comments/{commentId}")
+  public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+    String email = SecurityUtils.getCurrentUserEmail();
+    proofService.deleteComment(commentId, email);
+    return ResponseEntity.noContent().build();
+  }
 }
