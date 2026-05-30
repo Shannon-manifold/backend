@@ -32,7 +32,7 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
-    @Column(name = "system", length = 100)
+    @Column(name = "`system`", length = 100)
     private String preferredSystem;
 
     @Column(name = "join_date", nullable = false)
