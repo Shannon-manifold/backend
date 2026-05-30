@@ -9,6 +9,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -26,14 +29,27 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOriginPattern("*");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             // 세션을 사용하지 않으므로 STATELESS로 설정
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/api/v1/auth/**").permitAll() // 메인 및 로그인/회원가입 허용
+                .requestMatchers("/", "/api/v1/auth/**", "/error").permitAll() // 메인 및 로그인/회원가입, 에러 경로 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/blogs/**").permitAll() // 블로그 조회 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/questions/**").permitAll() // 질문/답변 조회 허용
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/challenges/**").permitAll() // 챌린지 조회 허용
