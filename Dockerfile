@@ -55,8 +55,9 @@ ENV PATH="${ELAN_HOME}/bin:${PATH}"
 RUN curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.29.1
 
 # 빌드 시점에 Mathlib 의존성 및 캐시를 다운로드하여 런타임에 딜레이가 발생하지 않도록 캐싱
+# (로컬 M1/M2 Mac Docker 에뮬레이터 환경의 clang Bus error 등 예외 대비하여 실패 시에도 빌드는 계속 진행되도록 설정)
 WORKDIR /app/test
-RUN lake update && lake exe cache get
+RUN (lake update && lake exe cache get) || echo "Warning: Lean mathlib dependencies setup failed or was skipped."
 
 # 실행을 위한 작업 디렉토리 복귀
 WORKDIR /app
