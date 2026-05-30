@@ -16,7 +16,9 @@ services:
       - shannon-net
 
   app:
-    build: .
+    build:
+      context: .
+      shm_size: 2gb
     container_name: shannon-backend
     expose:
       - "8080"
