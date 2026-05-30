@@ -157,4 +157,113 @@ public class TutorialService {
                         return true;
                 }
         }
+
+        public com.shannonmanifold.backend.dto.VerifyResponse verifyStep(Long tutorialId, Long stepId, String code) {
+                // 1. 유효한 단계가 존재하는지 검증
+                tutorialStepRepository.findById(stepId)
+                                .orElseThrow(() -> new IllegalArgumentException("해당 단계를 찾을 수 없습니다. ID: " + stepId));
+
+                // 2. 검증을 수행할 test 디렉토리 위치 탐색
+                java.io.File testDir = new java.io.File("test");
+                if (!testDir.exists()) {
+                        testDir = new java.io.File(System.getProperty("user.dir"), "test");
+                }
+                if (!testDir.exists()) {
+                        testDir = new java.io.File("../test");
+                }
+
+                // 3. 임시 파일명 생성 및 코드 저장
+                String fileName = "verify_" + System.currentTimeMillis() + "_" + (int) (Math.random() * 1000) + ".lean";
+                java.io.File tempFile = new java.io.File(testDir, fileName);
+
+                try {
+                        java.nio.file.Files.writeString(tempFile.toPath(), code != null ? code : "");
+                } catch (java.io.IOException e) {
+                        return com.shannonmanifold.backend.dto.VerifyResponse.builder()
+                                        .verified(false)
+                                        .output("임시 파일을 생성하는 과정에서 서버 오류가 발생했습니다: " + e.getMessage())
+                                        .build();
+                }
+
+                // 4. lean 및 lake 실행 파일 절대 경로 탐색 (PATH 보정)
+                String lakePath = getCommandPath("lake");
+                String leanPath = getCommandPath("lean");
+
+                try {
+                        // lake env lean <파일명> 실행
+                        String[] command = {lakePath, "env", leanPath, tempFile.getName()};
+                        ProcessBuilder pb = new ProcessBuilder(command);
+                        pb.directory(testDir);
+
+                        Process process = pb.start();
+                        boolean finished = process.waitFor(15, java.util.concurrent.TimeUnit.SECONDS);
+
+                        if (!finished) {
+                                process.destroyForcibly();
+                                return com.shannonmanifold.backend.dto.VerifyResponse.builder()
+                                                .verified(false)
+                                                .output("검증 시간 초과 (15초 초과)")
+                                                .build();
+                        }
+
+                        // 출력 스트림 읽기
+                        String stdout = readStream(process.getInputStream());
+                        String stderr = readStream(process.getErrorStream());
+                        String output = (stdout + "\n" + stderr).trim();
+                        int exitCode = process.exitValue();
+
+                        // 검증 성공 여부 판별
+                        // 1. exitCode가 0이고
+                        // 2. 출력 결과에 "error:"가 없으며
+                        // 3. Lean에서 sorry 가설을 사용한 경고("warning: declaration uses `sorry`" 등)가 없는 경우 성공
+                        boolean verified = (exitCode == 0);
+                        if (output.toLowerCase().contains("error:") || output.contains("uses `sorry`") || output.contains("uses 'sorry'")) {
+                                verified = false;
+                        }
+
+                        return com.shannonmanifold.backend.dto.VerifyResponse.builder()
+                                        .verified(verified)
+                                        .output(output.isEmpty() ? "검증 완료 (에러 없음)" : output)
+                                        .build();
+
+                } catch (Exception e) {
+                        return com.shannonmanifold.backend.dto.VerifyResponse.builder()
+                                        .verified(false)
+                                        .output("Lean 컴파일러 실행 중 오류가 발생했습니다: " + e.getMessage())
+                                        .build();
+                } finally {
+                        // 임시 파일 삭제
+                        try {
+                                java.nio.file.Files.deleteIfExists(tempFile.toPath());
+                        } catch (java.io.IOException e) {
+                                // 로깅 생략
+                        }
+                }
+        }
+
+        private String getCommandPath(String cmd) {
+                try {
+                        Process p = Runtime.getRuntime().exec(new String[]{cmd, "--version"});
+                        p.waitFor();
+                        return cmd;
+                } catch (Exception e) {
+                        String home = System.getProperty("user.home");
+                        java.io.File elanCmd = new java.io.File(home, ".elan/bin/" + cmd);
+                        if (elanCmd.exists()) {
+                                return elanCmd.getAbsolutePath();
+                        }
+                        return cmd;
+                }
+        }
+
+        private String readStream(java.io.InputStream is) throws java.io.IOException {
+                try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                                sb.append(line).append("\n");
+                        }
+                        return sb.toString();
+                }
+        }
 }

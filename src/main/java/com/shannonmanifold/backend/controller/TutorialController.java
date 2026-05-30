@@ -2,6 +2,8 @@ package com.shannonmanifold.backend.controller;
 
 import com.shannonmanifold.backend.dto.TutorialDetailResponse;
 import com.shannonmanifold.backend.dto.TutorialResponse;
+import com.shannonmanifold.backend.dto.VerifyRequest;
+import com.shannonmanifold.backend.dto.VerifyResponse;
 import com.shannonmanifold.backend.service.TutorialService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -49,5 +51,14 @@ public class TutorialController {
         boolean added = tutorialService.toggleBookmark(tutorialId, email);
         String message = added ? "튜토리얼 북마크 추가 성공" : "튜토리얼 북마크 제거 성공";
         return ResponseEntity.ok(message);
+    }
+
+    @PostMapping("/tutorials/{tutorialId}/steps/{stepId}/verify")
+    public ResponseEntity<VerifyResponse> verifyStep(
+            @PathVariable Long tutorialId,
+            @PathVariable Long stepId,
+            @RequestBody VerifyRequest request) {
+        VerifyResponse response = tutorialService.verifyStep(tutorialId, stepId, request.getCode());
+        return ResponseEntity.ok(response);
     }
 }
