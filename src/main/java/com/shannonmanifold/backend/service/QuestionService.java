@@ -19,6 +19,11 @@ import com.shannonmanifold.backend.repository.QnaAnswerRepository;
 import com.shannonmanifold.backend.repository.QnaQuestionRepository;
 import com.shannonmanifold.backend.repository.UserRepository;
 import com.shannonmanifold.backend.repository.NotificationRepository;
+import com.shannonmanifold.backend.repository.AnswerCommentRepository;
+import com.shannonmanifold.backend.entity.AnswerComment;
+import com.shannonmanifold.backend.dto.CommentResponse;
+import com.shannonmanifold.backend.dto.CommentCreateRequest;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +46,7 @@ public class QuestionService {
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final AnswerCommentRepository answerCommentRepository;
 
     public List<QuestionResponse> getAllQuestions() {
         return questionRepository.findAllByOrderByDateDesc().stream()
@@ -266,6 +272,43 @@ public class QuestionService {
                 .content(a.getContent())
                 .likes(a.getLikes())
                 .accepted(a.isAccepted())
+                .build();
+    }
+
+    public List<CommentResponse> getAnswerComments(Long answerId) {
+        List<AnswerComment> comments = answerCommentRepository.findByQnaAnswerIdOrderByCreatedAtAsc(answerId);
+        return comments.stream()
+                .map(c -> CommentResponse.builder()
+                        .id(c.getId())
+                        .answerId(c.getQnaAnswer().getId())
+                        .authorId(c.getUser().getId())
+                        .authorName(c.getUser().getName())
+                        .content(c.getContent())
+                        .date(c.getCreatedAt() != null ? c.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CommentResponse createAnswerComment(Long answerId, CommentCreateRequest request, String email) {
+        User user = findUserOrThrow(email);
+        QnaAnswer answer = findAnswerOrThrow(answerId);
+
+        AnswerComment comment = AnswerComment.builder()
+                .qnaAnswer(answer)
+                .user(user)
+                .content(request.getContent())
+                .build();
+
+        AnswerComment saved = answerCommentRepository.save(comment);
+
+        return CommentResponse.builder()
+                .id(saved.getId())
+                .answerId(saved.getQnaAnswer().getId())
+                .authorId(saved.getUser().getId())
+                .authorName(saved.getUser().getName())
+                .content(saved.getContent())
+                .date(saved.getCreatedAt() != null ? saved.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
                 .build();
     }
 }

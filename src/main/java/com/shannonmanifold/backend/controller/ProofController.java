@@ -5,6 +5,8 @@ import com.shannonmanifold.backend.dto.ProofCreateRequest;
 import com.shannonmanifold.backend.dto.ProofUpdateRequest;
 import com.shannonmanifold.backend.dto.ProofDetailResponse;
 import com.shannonmanifold.backend.dto.ProofResponse;
+import com.shannonmanifold.backend.dto.CommentResponse;
+import com.shannonmanifold.backend.dto.CommentCreateRequest;
 import com.shannonmanifold.backend.service.ProofService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -79,5 +81,20 @@ public class ProofController {
     boolean added = proofService.toggleBookmark(proofId, email);
     String message = added ? "증명 북마크 추가 성공" : "증명 북마크 제거 성공";
     return ResponseEntity.ok(message);
+  }
+
+  @GetMapping("/{proofId}/comments")
+  public ResponseEntity<List<CommentResponse>> getComments(@PathVariable Long proofId) {
+    List<CommentResponse> comments = proofService.getComments(proofId);
+    return ResponseEntity.ok(comments);
+  }
+
+  @PostMapping("/{proofId}/comments")
+  public ResponseEntity<CommentResponse> createComment(
+      @PathVariable Long proofId,
+      @RequestBody CommentCreateRequest request) {
+    String email = SecurityUtils.getCurrentUserEmail();
+    CommentResponse response = proofService.createComment(proofId, request, email);
+    return ResponseEntity.status(201).body(response);
   }
 }
