@@ -23,10 +23,9 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (tutorialRepository.count() == 0) {
-            log.info("기본 튜토리얼 데이터가 없습니다. 집합론, 해석학, 위상수학 튜토리얼 데이터를 생성합니다.");
-
-            // 1. 집합론 (Set Theory) 튜토리얼 생성
+        // 1. 집합론 (Set Theory) 튜토리얼 생성
+        if (!tutorialRepository.existsByTitle("집합론 (Set Theory)")) {
+            log.info("집합론 튜토리얼 데이터가 없어 생성합니다.");
             Tutorial setTheory = Tutorial.builder()
                     .title("집합론 (Set Theory)")
                     .description("수학의 기초가 되는 집합론의 기본 개념과 논리 기호를 학습하고 Lean 4를 통해 증명해봅니다.")
@@ -64,9 +63,12 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .build();
 
             tutorialStepRepository.saveAll(List.of(setStep1, setStep2));
+            log.info("집합론 튜토리얼 데이터 생성 완료");
+        }
 
-
-            // 2. 해석학 (Mathematical Analysis) 튜토리얼 생성
+        // 2. 해석학 (Mathematical Analysis) 튜토리얼 생성
+        if (!tutorialRepository.existsByTitle("해석학 (Mathematical Analysis)")) {
+            log.info("해석학 튜토리얼 데이터가 없어 생성합니다.");
             Tutorial analysis = Tutorial.builder()
                     .title("해석학 (Mathematical Analysis)")
                     .description("실수의 완비성 공리, 수열의 극한, 그리고 함수의 연속성을 Lean 4로 엄밀하게 정의하고 증명합니다.")
@@ -104,9 +106,12 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .build();
 
             tutorialStepRepository.saveAll(List.of(analysisStep1, analysisStep2));
+            log.info("해석학 튜토리얼 데이터 생성 완료");
+        }
 
-
-            // 3. 위상수학 (Topology) 튜토리얼 생성
+        // 3. 위상수학 (Topology) 튜토리얼 생성
+        if (!tutorialRepository.existsByTitle("위상수학 (Topology)")) {
+            log.info("위상수학 튜토리얼 데이터가 없어 생성합니다.");
             Tutorial topology = Tutorial.builder()
                     .title("위상수학 (Topology)")
                     .description("열린 집합, 닫힌 집합, 그리고 위상 공간에서의 연속 사상의 개념을 추상화하여 학습합니다.")
@@ -144,10 +149,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .build();
 
             tutorialStepRepository.saveAll(List.of(topologyStep1, topologyStep2));
-
-            log.info("기본 튜토리얼 데이터 생성 완료 (집합론, 해석학, 위상수학 3종)");
-        } else {
-            log.info("튜토리얼 테이블에 기존 데이터가 있어 초기화를 건너뜁니다.");
+            log.info("위상수학 튜토리얼 데이터 생성 완료");
         }
     }
 }
