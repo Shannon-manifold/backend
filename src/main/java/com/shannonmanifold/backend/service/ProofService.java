@@ -19,8 +19,13 @@ import com.shannonmanifold.backend.repository.ProofRepository;
 import com.shannonmanifold.backend.repository.UserRepository;
 import com.shannonmanifold.backend.repository.NotificationRepository;
 import com.shannonmanifold.backend.repository.ProofLikeRepository;
+import com.shannonmanifold.backend.repository.ProofCommentRepository;
+import com.shannonmanifold.backend.entity.ProofComment;
+import com.shannonmanifold.backend.dto.CommentResponse;
+import com.shannonmanifold.backend.dto.CommentCreateRequest;
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +47,7 @@ public class ProofService {
   private final UserRepository userRepository;
   private final NotificationRepository notificationRepository;
   private final ProofLikeRepository proofLikeRepository;
+  private final ProofCommentRepository proofCommentRepository;
 
   public List<ProofResponse> getAllProofs() {
     List<Proof> proofs = proofRepository.findAll();
@@ -248,5 +254,45 @@ public class ProofService {
     if (proverId == null || !proverId.equals(user.getId())) {
       throw new IllegalStateException("본인이 작성한 증명만 수정/삭제/검증할 수 있습니다.");
     }
+  }
+
+  public List<CommentResponse> getComments(Long proofId) {
+    List<ProofComment> comments = proofCommentRepository.findByProofIdOrderByCreatedAtAsc(proofId);
+    return comments.stream()
+        .map(c -> CommentResponse.builder()
+            .id(c.getId())
+            .proofId(c.getProof().getId())
+            .authorId(c.getUser().getId())
+            .authorName(c.getUser().getName())
+            .content(c.getContent())
+            .date(c.getCreatedAt() != null ? c.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
+            .build())
+        .collect(Collectors.toList());
+  }
+
+  @Transactional
+  public CommentResponse createComment(Long proofId, CommentCreateRequest request, String email) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. Email: " + email));
+    Proof proof = proofRepository.findById(proofId)
+        .orElseThrow(() -> new IllegalArgumentException("해당 증명을 찾을 수 없습니다. ID: " + proofId));
+
+    ProofComment comment = ProofComment.builder()
+        .proof(proof)
+        .user(user)
+        .content(request.getContent())
+        .build();
+
+    ProofComment saved = proofCommentRepository.save(comment);
+    proof.incrementCommentsCount();
+
+    return CommentResponse.builder()
+        .id(saved.getId())
+        .proofId(saved.getProof().getId())
+        .authorId(saved.getUser().getId())
+        .authorName(saved.getUser().getName())
+        .content(saved.getContent())
+        .date(saved.getCreatedAt() != null ? saved.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
+        .build();
   }
 }

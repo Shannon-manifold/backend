@@ -84,4 +84,8 @@ public class Proof {
       this.likes--;
     }
   }
+
+  public void incrementCommentsCount() {
+    this.commentsCount++;
+  }
 }

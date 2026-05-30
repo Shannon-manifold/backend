@@ -269,4 +269,18 @@ CREATE TABLE `notifications` (
   
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 12. Proof Comments
+-- ------------------------------------------------------------------------------
+CREATE TABLE `proof_comments` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `proof_id` BIGINT NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  `content` TEXT NOT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (`proof_id`) REFERENCES `proofs`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
