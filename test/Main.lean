@@ -1,4 +1,4 @@
-import Test
+import ShannonTest
 
 def main : IO Unit :=
   IO.println s!"Hello, {hello}!"
