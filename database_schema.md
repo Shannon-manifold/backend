@@ -16,6 +16,7 @@ CREATE TABLE `users` (
   `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(255) NOT NULL,
   `email` VARCHAR(255) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL,
   `avatar_url` VARCHAR(255),
   `bio` TEXT,
   `system` VARCHAR(100), -- 주 사용 증명 보조기 (예: Lean 4, Coq)
