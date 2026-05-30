@@ -3,6 +3,8 @@ package com.shannonmanifold.backend.controller;
 import com.shannonmanifold.backend.config.SecurityUtils;
 import com.shannonmanifold.backend.dto.AnswerCreateRequest;
 import com.shannonmanifold.backend.dto.AnswerResponse;
+import com.shannonmanifold.backend.dto.CommentResponse;
+import com.shannonmanifold.backend.dto.CommentCreateRequest;
 import com.shannonmanifold.backend.dto.QuestionCreateRequest;
 import com.shannonmanifold.backend.dto.QuestionDetailResponse;
 import com.shannonmanifold.backend.dto.QuestionResponse;
@@ -85,5 +87,20 @@ public class QuestionController {
         String email = SecurityUtils.getCurrentUserEmail();
         boolean added = questionService.toggleBookmark(questionId, email);
         return ResponseEntity.ok(added ? "질문 북마크 추가 성공" : "질문 북마크 제거 성공");
+    }
+
+    @GetMapping("/answers/{answerId}/comments")
+    public ResponseEntity<List<CommentResponse>> getAnswerComments(@PathVariable Long answerId) {
+        List<CommentResponse> comments = questionService.getAnswerComments(answerId);
+        return ResponseEntity.ok(comments);
+    }
+
+    @PostMapping("/answers/{answerId}/comments")
+    public ResponseEntity<CommentResponse> createAnswerComment(
+            @PathVariable Long answerId,
+            @RequestBody CommentCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        CommentResponse response = questionService.createAnswerComment(answerId, request, email);
+        return ResponseEntity.status(201).body(response);
     }
 }

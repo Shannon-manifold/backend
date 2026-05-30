@@ -283,4 +283,32 @@ CREATE TABLE `proof_comments` (
   FOREIGN KEY (`proof_id`) REFERENCES `proofs`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 13. Blog Comments
+-- ------------------------------------------------------------------------------
+CREATE TABLE `blog_comments` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `blog_post_id` BIGINT NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  `content` TEXT NOT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (`blog_post_id`) REFERENCES `blog_posts`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 14. Answer Comments
+-- ------------------------------------------------------------------------------
+CREATE TABLE `answer_comments` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `answer_id` BIGINT NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  `content` TEXT NOT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (`answer_id`) REFERENCES `qna_answers`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```

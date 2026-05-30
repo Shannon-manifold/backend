@@ -11,6 +11,11 @@ import com.shannonmanifold.backend.entity.User;
 import com.shannonmanifold.backend.repository.BlogPostRepository;
 import com.shannonmanifold.backend.repository.BookmarkRepository;
 import com.shannonmanifold.backend.repository.UserRepository;
+import com.shannonmanifold.backend.repository.BlogCommentRepository;
+import com.shannonmanifold.backend.entity.BlogComment;
+import com.shannonmanifold.backend.dto.CommentResponse;
+import com.shannonmanifold.backend.dto.CommentCreateRequest;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +33,7 @@ public class BlogService {
     private final BlogPostRepository blogPostRepository;
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
+    private final BlogCommentRepository blogCommentRepository;
 
     public List<BlogPostResponse> getAllPosts() {
         return blogPostRepository.findAllByOrderByDateDesc().stream()
@@ -144,6 +150,44 @@ public class BlogService {
                 .category(post.getCategory())
                 .imageUrl(post.getImageUrl())
                 .content(post.getContent())
+                .build();
+    }
+
+    public List<CommentResponse> getComments(Long blogId) {
+        List<BlogComment> comments = blogCommentRepository.findByBlogPostIdOrderByCreatedAtAsc(blogId);
+        return comments.stream()
+                .map(c -> CommentResponse.builder()
+                        .id(c.getId())
+                        .blogId(c.getBlogPost().getId())
+                        .authorId(c.getUser().getId())
+                        .authorName(c.getUser().getName())
+                        .content(c.getContent())
+                        .date(c.getCreatedAt() != null ? c.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CommentResponse createComment(Long blogId, CommentCreateRequest request, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. Email: " + email));
+        BlogPost post = findPostOrThrow(blogId);
+
+        BlogComment comment = BlogComment.builder()
+                .blogPost(post)
+                .user(user)
+                .content(request.getContent())
+                .build();
+
+        BlogComment saved = blogCommentRepository.save(comment);
+
+        return CommentResponse.builder()
+                .id(saved.getId())
+                .blogId(saved.getBlogPost().getId())
+                .authorId(saved.getUser().getId())
+                .authorName(saved.getUser().getName())
+                .content(saved.getContent())
+                .date(saved.getCreatedAt() != null ? saved.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
                 .build();
     }
 }

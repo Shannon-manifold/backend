@@ -5,6 +5,8 @@ import com.shannonmanifold.backend.dto.BlogPostCreateRequest;
 import com.shannonmanifold.backend.dto.BlogPostDetailResponse;
 import com.shannonmanifold.backend.dto.BlogPostResponse;
 import com.shannonmanifold.backend.dto.BlogPostUpdateRequest;
+import com.shannonmanifold.backend.dto.CommentResponse;
+import com.shannonmanifold.backend.dto.CommentCreateRequest;
 import com.shannonmanifold.backend.service.BlogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -63,5 +65,20 @@ public class BlogController {
         String email = SecurityUtils.getCurrentUserEmail();
         boolean added = blogService.toggleBookmark(postId, email);
         return ResponseEntity.ok(added ? "블로그 북마크 추가 성공" : "블로그 북마크 제거 성공");
+    }
+
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<List<CommentResponse>> getComments(@PathVariable Long postId) {
+        List<CommentResponse> comments = blogService.getComments(postId);
+        return ResponseEntity.ok(comments);
+    }
+
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<CommentResponse> createComment(
+            @PathVariable Long postId,
+            @RequestBody CommentCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        CommentResponse response = blogService.createComment(postId, request, email);
+        return ResponseEntity.status(201).body(response);
     }
 }
