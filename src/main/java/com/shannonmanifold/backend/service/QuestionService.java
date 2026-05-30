@@ -311,4 +311,50 @@ public class QuestionService {
                 .date(saved.getCreatedAt() != null ? saved.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
                 .build();
     }
+
+    @Transactional
+    public AnswerResponse updateAnswer(Long answerId, AnswerCreateRequest request, String email) {
+        QnaAnswer answer = findAnswerOrThrow(answerId);
+        validateAuthor(answer.getAuthorId(), email);
+
+        answer.update(request.getContent());
+        return toAnswerResponse(answer);
+    }
+
+    @Transactional
+    public void deleteAnswer(Long answerId, String email) {
+        QnaAnswer answer = findAnswerOrThrow(answerId);
+        QnaQuestion question = findQuestionOrThrow(answer.getQuestionId());
+        validateAuthor(answer.getAuthorId(), email);
+
+        question.decrementAnswersCount();
+        answerRepository.delete(answer);
+    }
+
+    @Transactional
+    public CommentResponse updateAnswerComment(Long commentId, CommentCreateRequest request, String email) {
+        AnswerComment comment = answerCommentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다. ID: " + commentId));
+        validateAuthor(comment.getUser().getId(), email);
+
+        comment.update(request.getContent());
+
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .answerId(comment.getQnaAnswer().getId())
+                .authorId(comment.getUser().getId())
+                .authorName(comment.getUser().getName())
+                .content(comment.getContent())
+                .date(comment.getCreatedAt() != null ? comment.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
+                .build();
+    }
+
+    @Transactional
+    public void deleteAnswerComment(Long commentId, String email) {
+        AnswerComment comment = answerCommentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다. ID: " + commentId));
+        validateAuthor(comment.getUser().getId(), email);
+
+        answerCommentRepository.delete(comment);
+    }
 }

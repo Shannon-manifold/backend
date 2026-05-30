@@ -36,4 +36,10 @@ public class ProofComment {
             this.createdAt = LocalDateTime.now();
         }
     }
+
+    public void update(String content) {
+        if (content != null) {
+            this.content = content;
+        }
+    }
 }

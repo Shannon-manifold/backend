@@ -190,4 +190,31 @@ public class BlogService {
                 .date(saved.getCreatedAt() != null ? saved.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
                 .build();
     }
+
+    @Transactional
+    public CommentResponse updateComment(Long commentId, CommentCreateRequest request, String email) {
+        BlogComment comment = blogCommentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다. ID: " + commentId));
+        validateAuthor(comment.getUser().getId(), email);
+
+        comment.update(request.getContent());
+
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .blogId(comment.getBlogPost().getId())
+                .authorId(comment.getUser().getId())
+                .authorName(comment.getUser().getName())
+                .content(comment.getContent())
+                .date(comment.getCreatedAt() != null ? comment.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null)
+                .build();
+    }
+
+    @Transactional
+    public void deleteComment(Long commentId, String email) {
+        BlogComment comment = blogCommentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다. ID: " + commentId));
+        validateAuthor(comment.getUser().getId(), email);
+
+        blogCommentRepository.delete(comment);
+    }
 }

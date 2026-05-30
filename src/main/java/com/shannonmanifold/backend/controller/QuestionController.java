@@ -103,4 +103,35 @@ public class QuestionController {
         CommentResponse response = questionService.createAnswerComment(answerId, request, email);
         return ResponseEntity.status(201).body(response);
     }
+
+    @PutMapping("/answers/{answerId}")
+    public ResponseEntity<AnswerResponse> updateAnswer(
+            @PathVariable Long answerId,
+            @RequestBody AnswerCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.ok(questionService.updateAnswer(answerId, request, email));
+    }
+
+    @DeleteMapping("/answers/{answerId}")
+    public ResponseEntity<Void> deleteAnswer(@PathVariable Long answerId) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        questionService.deleteAnswer(answerId, email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/answers/comments/{commentId}")
+    public ResponseEntity<CommentResponse> updateAnswerComment(
+            @PathVariable Long commentId,
+            @RequestBody CommentCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        CommentResponse response = questionService.updateAnswerComment(commentId, request, email);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/answers/comments/{commentId}")
+    public ResponseEntity<Void> deleteAnswerComment(@PathVariable Long commentId) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        questionService.deleteAnswerComment(commentId, email);
+        return ResponseEntity.noContent().build();
+    }
 }
