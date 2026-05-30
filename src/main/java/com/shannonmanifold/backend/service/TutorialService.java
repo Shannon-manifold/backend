@@ -196,13 +196,13 @@ public class TutorialService {
                         pb.directory(testDir);
 
                         Process process = pb.start();
-                        boolean finished = process.waitFor(15, java.util.concurrent.TimeUnit.SECONDS);
+                        boolean finished = process.waitFor(60, java.util.concurrent.TimeUnit.SECONDS);
 
                         if (!finished) {
                                 process.destroyForcibly();
                                 return com.shannonmanifold.backend.dto.VerifyResponse.builder()
                                                 .verified(false)
-                                                .output("검증 시간 초과 (15초 초과)")
+                                                .output("검증 시간 초과 (60초 초과)")
                                                 .build();
                         }
 
