@@ -3,6 +3,7 @@ package com.shannonmanifold.backend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shannonmanifold.backend.dto.ChallengeCreateRequest;
 import com.shannonmanifold.backend.dto.ChallengeDetailResponse;
 import com.shannonmanifold.backend.dto.ChallengeResponse;
 import com.shannonmanifold.backend.entity.Challenge;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,6 +37,40 @@ public class ChallengeService {
 
     public ChallengeDetailResponse getChallenge(Long challengeId) {
         return toDetailResponse(findChallengeOrThrow(challengeId));
+    }
+
+    // 난제 등록: 인증 필요, backers는 0부터 시작
+    @Transactional
+    public ChallengeDetailResponse createChallenge(ChallengeCreateRequest request, String email) {
+        userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. Email: " + email));
+
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
+            throw new IllegalArgumentException("제목은 필수입니다.");
+        }
+        if (request.getDifficulty() == null) {
+            throw new IllegalArgumentException("난이도는 필수입니다.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        Challenge challenge = Challenge.builder()
+                .title(request.getTitle())
+                .field(request.getField())
+                .description(request.getDescription())
+                .prize(request.getPrize())
+                .sponsorPool(request.getSponsorPool())
+                .backers(0)
+                .progress(request.getProgress())
+                .difficulty(request.getDifficulty())
+                .proofSystem(request.getProofSystem())
+                .accent(request.getAccent())
+                .detailedDescription(request.getDetailedDescription())
+                .referencesJson(writeReferences(request.getReferences()))
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        return toDetailResponse(challengeRepository.save(challenge));
     }
 
     @Transactional
@@ -83,6 +119,15 @@ public class ChallengeService {
                 .detailedDescription(challenge.getDetailedDescription())
                 .references(parseReferences(challenge.getReferencesJson()))
                 .build();
+    }
+
+    private String writeReferences(List<Map<String, String>> references) {
+        if (references == null || references.isEmpty()) return null;
+        try {
+            return objectMapper.writeValueAsString(references);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 
     private List<Map<String, String>> parseReferences(String json) {
