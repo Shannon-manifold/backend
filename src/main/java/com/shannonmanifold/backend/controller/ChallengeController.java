@@ -1,6 +1,7 @@
 package com.shannonmanifold.backend.controller;
 
 import com.shannonmanifold.backend.config.SecurityUtils;
+import com.shannonmanifold.backend.dto.ChallengeCreateRequest;
 import com.shannonmanifold.backend.dto.ChallengeDetailResponse;
 import com.shannonmanifold.backend.dto.ChallengeResponse;
 import com.shannonmanifold.backend.service.ChallengeService;
@@ -32,6 +33,13 @@ public class ChallengeController {
     @GetMapping("/{challengeId}")
     public ResponseEntity<ChallengeDetailResponse> getChallenge(@PathVariable Long challengeId) {
         return ResponseEntity.ok(challengeService.getChallenge(challengeId));
+    }
+
+    // 난제 등록: 인증 필요
+    @PostMapping
+    public ResponseEntity<ChallengeDetailResponse> createChallenge(@RequestBody ChallengeCreateRequest request) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.status(201).body(challengeService.createChallenge(request, email));
     }
 
     // 후원: 인증 필요, backers 카운트 1 증가
